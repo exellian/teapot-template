@@ -1,0 +1,23 @@
+{
+  "name": "teapot",
+  "version": "0.0.1",
+  "description": "A Frontend java framework for developing modern web applications",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "JAVA",
+    "Javascipt",
+    "TeaVM",
+    "Typescript"
+  ],
+  "author": "Maximilian Gabler",
+  "license": "ISC",
+  "dependencies": {
+    "@types/jsdom": "^12.2.4",
+    "jsdom": "^15.2.1",
+    "tslib": "^1.10.0",
+    "typescript": "^3.7.4"
+  }
+}
