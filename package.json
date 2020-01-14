@@ -26,7 +26,6 @@
     "@types/jsdom": "^12.2.4",
     "jsdom": "^15.2.1",
     "tslib": "^1.10.0",
-    "typescript": "^3.7.4",
-    "typedoc": "^0.9.0"
+    "typescript": "^3.7.4"
   }
 }
