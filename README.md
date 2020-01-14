@@ -7,7 +7,7 @@
 
 let template: Template = new Template("<div>" +
                                         "@for(int i = 0;i < 10;i++)" + 
-                                        "<div>@(test)_@(i)</div>" +
+                                        "<div>@(test) @(i)</div>" +
                                       "</div>");
 
 let exception: VoidUnhandled<TemplateParseException> = template.parse();
