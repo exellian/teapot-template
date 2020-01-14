@@ -1,7 +1,7 @@
 # teapot-template
  A template engine with annotation syntax
 ## Templates
- This example shows how you can create a template
+ This example shows how you can create and render a template
  
 ```typescript
 
