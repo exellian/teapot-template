@@ -4,7 +4,9 @@
   "description": "A Frontend java framework for developing modern web applications",
   "main": "index.ts",
   "scripts": {
-    "test": "tsc"
+    "test": "node dist/out-tsc/index.js",
+    "setup": "npm install",
+    "build": "tsc"
   },
   "keywords": [
     "JAVA",
