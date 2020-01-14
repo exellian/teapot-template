@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/exellian/teapot-template.svg?branch=master)](https://travis-ci.com/exellian/teapot-template)
 # teapot-template
  A template engine with annotation syntax
 ## Templates
