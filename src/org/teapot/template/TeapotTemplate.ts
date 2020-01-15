@@ -139,12 +139,11 @@ export default class TeapotTemplate implements Template<TeapotTemplatePack> {
             let expression: string = annotation.substring(indexOfFirstBracket + 1, annotation.lastIndexOf(')'))
             for (let type of AnnotationType.getValues()) {
                 if (type.getName() === name) {
-                    let annotation: Annotation = type.newInstance(expression, tag);
-                    let parseRes: VoidUnhandled<TemplateParseException> = annotation.parse();
-                    if (parseRes.isThrown()) {
-                        return new Unhandled<TemplateParseException, Renderable>(parseRes.get());
+                    let annotation: Unhandled<TemplateParseException, Annotation> = type.parse(expression, tag);
+                    if (annotation.isThrown()) {
+                        return new Unhandled<TemplateParseException, Renderable>(annotation.get());
                     }
-                    tag = annotation;
+                    tag = annotation.get();
                     break;
                 }
             }
