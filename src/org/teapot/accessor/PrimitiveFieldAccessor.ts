@@ -3,7 +3,7 @@ export default class PrimitiveFieldAccessor {
     private readonly accessor: number | string;
     private checked: boolean;
 
-    constructor(accessor: number | string) {
+    public constructor(accessor: number | string) {
 		this.accessor = accessor;
 		this.setChecked(false);
 	}
@@ -12,11 +12,11 @@ export default class PrimitiveFieldAccessor {
 		return this.accessor;
 	}
 
-	public getAsString(): string {
-		if (!this.isChecked()) {
+    public getAsString(): string {
+        if (!this.isChecked()) {
 			throw new Error("FieldAccessor type has to be checked!");
 		}
-		return <string>this.getAccessor();
+	       return <string>this.getAccessor();
 	}
 
 	public getAsInteger(): number {
@@ -37,7 +37,7 @@ export default class PrimitiveFieldAccessor {
 	}
 
 	private isChecked(): boolean{
-		return this.checked;
+	       return this.checked;
 	}
 
 	private setChecked(checked: boolean): void {

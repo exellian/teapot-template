@@ -22,7 +22,7 @@
 */
 export default class Runtime {
 
-     public static isNodeJS(): boolean {
-         return true;
-     }
+    public static isNodeJS(): boolean {
+        return true;
+    }
 }
