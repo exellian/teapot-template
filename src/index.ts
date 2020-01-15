@@ -1,10 +1,7 @@
-import VoidUnhandled from './org/teapot/util/VoidUnhandled';
-import Template from './org/teapot/template/Template';
-
 import * as fs from "fs";
 import TemplateParseException from './org/teapot/exception/TemplateParseException';
-import Pack from './org/teapot/package/Pack';
-import Packer from './org/teapot/package/Packer';
+import TeapotTemplate from './org/teapot/template/TeapotTemplate';
+import Unhandled from './org/teapot/util/Unhandled';
 
 class IO {
 
@@ -29,19 +26,9 @@ let files: string[] = IO.listFiles(__dirname);
 for (let key in files) {
     let file = files[key];
     if (file.endsWith(".html")) {
-        let t: Template = new Template(fs.readFileSync(file).toString());
+        let t: Unhandled<TemplateParseException, TeapotTemplate> = TeapotTemplate.parse(fs.readFileSync(file).toString());
 
         console.time('parse');
-
-        let res: VoidUnhandled<TemplateParseException> = t.parse();
-
-
-
-        if (res.isThrown()) {
-            throw new Error(res.get().getMessage());
-        }
-
-        console.log(Packer.toJSON(t));
 
         console.timeEnd('parse');
     }

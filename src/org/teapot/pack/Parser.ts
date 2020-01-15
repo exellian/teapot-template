@@ -1,3 +1,4 @@
+/*
 import TemplatePack from './template/TemplatePack';
 import Renderable from '../util/Renderable';
 import RenderablePack from './template/RenderablePack';
@@ -85,3 +86,4 @@ export default class Parser {
     }
 
 }
+*/

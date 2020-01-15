@@ -1,3 +1,4 @@
+/*
 import Template from '../template/Template';
 import TemplatePack from './template/TemplatePack';
 import Renderable from '../util/Renderable';
@@ -167,3 +168,4 @@ export default class Packer {
         return result;
     }
 }
+*/
