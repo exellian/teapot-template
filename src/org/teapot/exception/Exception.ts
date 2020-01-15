@@ -7,6 +7,6 @@ export default class Exception {
     }
 
     public getMessage(): string {
-        return (this.message instanceof Exception) ? this.message.getMessage() : this.message;
+        return this.message instanceof Exception ? this.message.getMessage() : this.message;
     }
 }
