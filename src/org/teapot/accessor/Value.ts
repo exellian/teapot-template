@@ -1,7 +1,4 @@
 import Expression from './Expression';
-import AccessorParseException from '../exception/AccessorParseException';
-import Parsable from '../util/Parsable';
-import VoidUnhandled from '../util/VoidUnhandled';
 import Scope from '../view/Scope';
 import Unhandled from '../util/Unhandled';
 import InvalidViewAccessException from '../exception/InvalidViewAccessException';
@@ -10,67 +7,51 @@ import Field from '../view/Field';
 import StringParseException from '../exception/StringParseException';
 import NumberFormatException from '../exception/NumberFormatException';
 import BooleanParseException from '../exception/BooleanParseException';
+import Checker from '../util/Checker';
+import IllegalArgumentException from '../exception/IllegalArgumentException';
+import ExpressionPack from '../pack/ExpressionPack';
 
 export default class Value implements Expression {
 
-    private readonly accessor: string;
+    private readonly value: number | string | boolean;
 
-    private value: number | string | boolean;
-
-    private parsed: boolean;
-
-    private setParsed(parsed: boolean): void {
-        this.parsed = parsed;
-    }
-
-    public constructor(accessor: string) {
-        this.accessor = accessor;
-        this.setParsed(false);
-    }
-
-    private setValue(value: number | string | boolean): void {
+    private constructor(value: number | string | boolean) {
+        if (!Checker.checkNotNull(value)) {
+            throw new IllegalArgumentException("Value can not be null!");
+        }
         this.value = value;
     }
 
-    public getValue(): number | string | boolean {
+    pack(): ExpressionPack {
+        throw new Error("Method not implemented.");
+    }
+
+    private getValue(): number | string | boolean {
         return this.value;
     }
 
-    private getAccessor(): string {
-        return this.accessor;
+    public static parse(accessor: string): [boolean, Value] {
+        if (!Checker.checkNotNull(accessor)) {
+            throw new IllegalArgumentException("Accessor can not be null!");
+        }
+        let stringValue: Unhandled<StringParseException, string> = Value.parseString(accessor);
+        if (!stringValue.isThrown()) {
+            return [true, new Value(stringValue.get())];
+        }
+        let integerValue: Unhandled<NumberFormatException, number> = Value.parseInteger(accessor);
+        if (!integerValue.isThrown()) {
+            return [true, new Value(integerValue.get())];
+        }
+        let doubleValue: Unhandled<NumberFormatException, number> = Value.parseDouble(accessor);
+        if (!doubleValue.isThrown()) {
+            return [true, new Value(doubleValue.get())];
+        }
+        let booleanValue: Unhandled<BooleanParseException, boolean> = Value.parseBoolean(accessor);
+        if (!booleanValue.isThrown()) {
+            return [true, new Value(booleanValue.get())];
+        }
+        return [false, null];
     }
-
-    parse(): VoidUnhandled<AccessorParseException> {
-        let res0: Unhandled<StringParseException, string> = Value.parseString(this.getAccessor());
-        if (!res0.isThrown()) {
-            this.setValue(res0.get());
-            this.setParsed(true);
-            return new VoidUnhandled<AccessorParseException>();
-        }
-        let res1: Unhandled<NumberFormatException, number> = Value.parseInteger(this.getAccessor());
-        if (!res1.isThrown()) {
-            this.setValue(res1.get());
-            this.setParsed(true);
-            return new VoidUnhandled<AccessorParseException>();
-        }
-        let res2: Unhandled<NumberFormatException, number> = Value.parseDouble(this.getAccessor());
-        if (!res2.isThrown()) {
-            this.setValue(res2.get());
-            this.setParsed(true);
-            return new VoidUnhandled<AccessorParseException>();
-        }
-        let res3: Unhandled<BooleanParseException, boolean> = Value.parseBoolean(this.getAccessor());
-        if (!res3.isThrown()) {
-            this.setValue(res3.get());
-            this.setParsed(true);
-            return new VoidUnhandled<AccessorParseException>();
-        }
-        return new VoidUnhandled<AccessorParseException>();
-    }
-    isParsed(): boolean {
-        return this.parsed;
-    }
-
 
     get(_scope: Scope): Unhandled<InvalidViewAccessException, PrimitiveField> {
         return new Unhandled<InvalidViewAccessException, PrimitiveField>(new PrimitiveField(this.getValue()));

@@ -1,8 +1,6 @@
 import Expression from "./Expression";
 import AccessorParseException from '../exception/AccessorParseException';
-import Parsable from '../util/Parsable';
 import FieldAccessor from './FieldAccessor';
-import VoidUnhandled from '../util/VoidUnhandled';
 import Unhandled from '../util/Unhandled';
 import ArrayFieldAccessor from './ArrayFieldAccessor';
 import FunctionFieldAccessor from './FunctionFieldAccessor';
@@ -11,90 +9,70 @@ import Scope from '../view/Scope';
 import InvalidViewAccessException from '../exception/InvalidViewAccessException';
 import PrimitiveField from '../view/PrimitiveField';
 import Field from '../view/Field';
+import Checker from '../util/Checker';
+import IllegalArgumentException from '../exception/IllegalArgumentException';
+import ExpressionPack from '../pack/ExpressionPack';
 
 export default class Property implements Expression {
 
-    private readonly accessor: string;
-	private parsed: boolean;
+	private readonly fields: FieldAccessor[];
 
-	private fields: FieldAccessor[];
-
-    private setParsed(parsed: boolean): void {
-        this.parsed = parsed;
+    private constructor(fields: FieldAccessor[]) {
+        if (!Checker.checkNotNull(fields)) {
+            throw new IllegalArgumentException("Fields can not be null!");
+        }
+        this.fields = fields;
     }
 
-    public constructor(accessor: string) {
-        this.accessor = accessor;
-		this.setParsed(false);
-    }
-
-    private getAccessor(): string {
-        return this.accessor;
-    }
-
-	private setLinkFields(fields: FieldAccessor[]): void {
-		this.fields = fields;
+	pack(): ExpressionPack {
+		throw new Error("Method not implemented.");
 	}
 
-    public getLinkFields(): FieldAccessor[] {
+    private getLinkFields(): FieldAccessor[] {
         return this.fields;
     }
 
-	parse(): VoidUnhandled<AccessorParseException> {
-		let partsRes: Unhandled<AccessorParseException, string[]> = Property.split(this.getAccessor());
+	public static parse(accessor: string): Unhandled<AccessorParseException, Property> {
 
-        if (partsRes.isThrown()) {
-            return new VoidUnhandled<AccessorParseException>(partsRes.getException());
+        if (!Checker.checkNotNull(accessor)) {
+            throw new IllegalArgumentException("Accessor can not be null!");
+        }
+
+		let partsResult: Unhandled<AccessorParseException, string[]> = Property.split(accessor);
+        if (partsResult.isThrown()) {
+            return new Unhandled<AccessorParseException, Property>(partsResult.getException());
         }
 
 		let fields: FieldAccessor[] = [];
-        let parts: string[] = partsRes.get();
+        let parts: string[] = partsResult.get();
 
-        var res: VoidUnhandled<AccessorParseException> = null;
-		for (var i: number = 0;i < parts.length;i++) {
-			let field0: ArrayFieldAccessor = new ArrayFieldAccessor(parts[i]);
-            res = field0.parse();
-            if (res.isThrown()) {
-                res.reset();
-                return res;
+		for (let i: number = 0;i < parts.length;i++) {
+            let accessor: string = parts[i];
+            if (ArrayFieldAccessor.checkFormat(accessor)) {
+                let afa: Unhandled<AccessorParseException, ArrayFieldAccessor> = ArrayFieldAccessor.parse(accessor);
+                if (afa.isThrown()) {
+                    return new Unhandled<AccessorParseException, Property>(afa.getException());
+                }
+                fields.push(afa.get());
+            } else if (FunctionFieldAccessor.checkFormat(accessor)) {
+                let ffa: Unhandled<AccessorParseException, FunctionFieldAccessor> = FunctionFieldAccessor.parse(accessor);
+                if (ffa.isThrown()) {
+                    return new Unhandled<AccessorParseException, Property>(ffa.getException());
+                }
+                fields.push(ffa.get());
+            } else {
+                let ofa: Unhandled<AccessorParseException, ObjectFieldAccessor> = ObjectFieldAccessor.parse(accessor);
+                if (ofa.isThrown()) {
+                    return new Unhandled<AccessorParseException, Property>(ofa.getException());
+                }
+                fields.push(ofa.get());
             }
-            if (field0.isParsed()) {
-                fields.push(field0);
-                continue;
-            }
-            let field1: FunctionFieldAccessor = new FunctionFieldAccessor(parts[i]);
-            res = field1.parse();
-            if (res.isThrown()) {
-                res.reset();
-                return res;
-            }
-            if (field1.isParsed()) {
-                fields.push(field1);
-                continue;
-            }
-            let field2: ObjectFieldAccessor = new ObjectFieldAccessor(parts[i]);
-            res = field2.parse();
-            if (res.isThrown()) {
-                res.reset();
-                return res;
-            }
-            if (field2.isParsed()) {
-                fields.push(field2);
-                continue;
-            }
-            return new VoidUnhandled<AccessorParseException>(new AccessorParseException("Failed to parse accessor!"));
 		}
-		this.setLinkFields(fields);
-		this.setParsed(true);
-        return new VoidUnhandled<AccessorParseException>();
-	}
-
-	isParsed(): boolean {
-		return this.parsed;
+        return new Unhandled<AccessorParseException, Property>(new Property(fields));
 	}
 
     get(scope: Scope): Unhandled<InvalidViewAccessException, PrimitiveField> {
-        var aktField: Field = scope;
+        let aktField: Field = scope;
 		for (let field of this.getLinkFields()) {
             let fieldRes: Unhandled<InvalidViewAccessException, Field> = field.get(scope, aktField);
             if (fieldRes.isThrown()) {
@@ -109,7 +87,7 @@ export default class Property implements Expression {
     }
 
     getField(scope: Scope): Unhandled<InvalidViewAccessException, Field> {
-        var aktField: Field = scope;
+        let aktField: Field = scope;
 		for (let field of this.getLinkFields()) {
             let fieldRes: Unhandled<InvalidViewAccessException, Field> = field.get(scope, aktField);
             if (fieldRes.isThrown()) {
@@ -125,9 +103,9 @@ export default class Property implements Expression {
         let parts: string[] = [];
 		let chars: string[] = accessorName.split("");
 
-		var edgedBracketDepth: number = 0;
-		var roundBracketDepth: number = 0;
-		var part: string = "";
+		let edgedBracketDepth: number = 0;
+		let roundBracketDepth: number = 0;
+		let part: string = "";
 		for (let c of chars) {
 			if (c === '.' && roundBracketDepth === 0 && edgedBracketDepth === 0) {
 				parts.push(part);

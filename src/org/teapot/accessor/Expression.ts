@@ -3,11 +3,12 @@ import Scope from '../view/Scope';
 import Unhandled from '../util/Unhandled';
 import PrimitiveField from '../view/PrimitiveField';
 import Field from '../view/Field';
-import Parsable from '../util/Parsable';
-import AccessorParseException from '../exception/AccessorParseException';
+import Packable from '../abstract/Packable';
+import ExpressionPack from '../pack/ExpressionPack';
 
-export default interface Expression extends Parsable<AccessorParseException> {
+export default interface Expression extends Packable<ExpressionPack> {
 
     get(scope: Scope): Unhandled<InvalidViewAccessException, PrimitiveField>;
 	getField(scope: Scope): Unhandled<InvalidViewAccessException, Field>;
+    
 }

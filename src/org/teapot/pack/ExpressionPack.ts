@@ -1,5 +1,5 @@
-import Pack from '../Pack';
 import FieldAccessorPack from './FieldAccessorPack';
+import Pack from '../abstract/Pack';
 
 export default class ExpressionPack extends Pack {
 
@@ -16,4 +16,8 @@ export default class ExpressionPack extends Pack {
 
     //VALUE
     public value: number | string | boolean;
+
+    public toJSON(): string {
+        return JSON.stringify(this);
+    }
 }

@@ -4,57 +4,54 @@ import InvalidViewAccessException from '../exception/InvalidViewAccessException'
 import Field from '../view/Field';
 import Scope from '../view/Scope';
 import AccessorParseException from '../exception/AccessorParseException';
-import Parsable from '../util/Parsable';
-import VoidUnhandled from '../util/VoidUnhandled';
 import Expression from './Expression';
 import Accessor from './Accessor';
 import PrimitiveField from '../view/PrimitiveField';
 import FunctionField from '../view/FunctionField';
+import Checker from '../util/Checker';
+import IllegalArgumentException from '../exception/IllegalArgumentException';
+import FieldAccessorPack from '../pack/FieldAccessorPack';
 
 export default class FunctionFieldAccessor implements FieldAccessor {
 
-    private readonly accessor: string;
+    private readonly parameters: Expression[];
 
-    private readonly parameters: Expression[] = [];
-
-    private parsed: boolean;
-
-    private setParsed(parsed: boolean): void {
-        this.parsed = parsed;
+    private constructor(parameters: Expression[]) {
+        if (!Checker.checkNotNull(parameters)) {
+            throw new IllegalArgumentException("Inner expression of Brackets can not be null!");
+        }
+        this.parameters = parameters;
     }
 
-    public constructor(accessor: string) {
-        this.accessor = accessor;
-        this.setParsed(false);
+    pack(): FieldAccessorPack {
+        throw new Error("Method not implemented.");
     }
 
-    public getLinkParameters(): Expression[] {
+    private getLinkParameters(): Expression[] {
         return this.parameters;
     }
 
-    private getAccessor(): string {
-        return this.accessor;
+    public static checkFormat(accessor: string): boolean {
+        return (accessor.startsWith("(") && accessor.endsWith(")"));
     }
 
-    parse(): VoidUnhandled<AccessorParseException> {
-
-        if (!this.getAccessor().startsWith("(") || !this.getAccessor().endsWith(")")) {
-			return new VoidUnhandled<AccessorParseException>();
-		}
-		let funcParts: string[] = FunctionFieldAccessor.split(this.getAccessor());
+    public static parse(accessor: string): Unhandled<AccessorParseException, FunctionFieldAccessor> {
+        if (!Checker.checkNotNull(accessor)) {
+            throw new IllegalArgumentException("Accessor can not be null!");
+        }
+        if (!FunctionFieldAccessor.checkFormat(accessor)) {
+            return new Unhandled<AccessorParseException, FunctionFieldAccessor>(new AccessorParseException("FunctionFieldAccessor must be surrounded by ()!"));
+        }
+        let parameters: Expression[] = [];
+		let funcParts: string[] = FunctionFieldAccessor.split(accessor);
 		for (let param of funcParts) {
             let expr: Unhandled<AccessorParseException, Expression> = Accessor.parseExpression(param);
             if (expr.isThrown()) {
-                return new VoidUnhandled<AccessorParseException>(expr.getException());
+                return new Unhandled<AccessorParseException, FunctionFieldAccessor>(expr.getException());
             }
-			this.getLinkParameters().push(expr.get());
+			parameters.push(expr.get());
 		}
-        this.setParsed(true);
-		return new VoidUnhandled<AccessorParseException>();
-    }
-
-    isParsed(): boolean {
-        return this.parsed;
+		return new Unhandled<AccessorParseException, FunctionFieldAccessor>(new FunctionFieldAccessor(parameters));
     }
 
     get(scope: Scope, field: Field): Unhandled<InvalidViewAccessException, Field> {
@@ -62,7 +59,7 @@ export default class FunctionFieldAccessor implements FieldAccessor {
             return new Unhandled<InvalidViewAccessException, Field>(new InvalidViewAccessException("FunctionFieldAccessor can only access functions!"));
 		}
 		let params: any[] = [];
-		var i: number = 0;
+		let i: number = 0;
 		for (let e of this.getLinkParameters()) {
             let param: Unhandled<InvalidViewAccessException, PrimitiveField> = e.get(scope);
             if (param.isThrown()) {
@@ -81,8 +78,8 @@ export default class FunctionFieldAccessor implements FieldAccessor {
 
 		let parts: string[] = [];
 		let chars: string[] = accessor.split("");
-		var part: string = "";
-		var roundedBracketDepth: number = 0;
+		let part: string = "";
+		let roundedBracketDepth: number = 0;
 		for (let c of chars) {
 			if (c === '(') {
 				roundedBracketDepth++;

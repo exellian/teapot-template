@@ -4,62 +4,54 @@ import InvalidViewAccessException from '../exception/InvalidViewAccessException'
 import Field from '../view/Field';
 import Scope from '../view/Scope';
 import AccessorParseException from '../exception/AccessorParseException';
-import Parsable from '../util/Parsable';
-import VoidUnhandled from '../util/VoidUnhandled';
 import Expression from './Expression';
 import Accessor from './Accessor';
 import ArrayField from '../view/ArrayField';
 import PrimitiveField from '../view/PrimitiveField';
 import PrimitiveFieldAccessor from './PrimitiveFieldAccessor';
+import Checker from '../util/Checker';
+import IllegalArgumentException from '../exception/IllegalArgumentException';
+import FieldAccessorPack from '../pack/FieldAccessorPack';
 
 export default class ArrayFieldAccessor implements FieldAccessor {
 
-    private readonly accessor: string;
+    private readonly innerExpression: Expression;
 
-    private innerExpression: Expression;
-
-    private parsed: boolean;
-
-    private setParsed(parsed: boolean): void {
-        this.parsed = parsed;
-    }
-
-    public constructor(accessor: string) {
-        this.accessor = accessor;
-        this.setParsed(false);
-    }
-
-    public getLinkInnerExpression(): Expression {
-        return this.innerExpression;
-    }
-
-    private setLinkInnerExpression(innerExpression: Expression): void {
+    private constructor(innerExpression: Expression) {
+        if (!Checker.checkNotNull(innerExpression)) {
+            throw new IllegalArgumentException("Inner expression of ArrayFieldAccessor can not be null!");
+        }
         this.innerExpression = innerExpression;
     }
 
-    private getAccessor(): string {
-        return this.accessor;
+    pack(): FieldAccessorPack {
+        throw new Error("Method not implemented.");
     }
 
-    parse(): VoidUnhandled<AccessorParseException> {
-        if (!this.getAccessor().startsWith("[") || !this.getAccessor().endsWith("]")) {
-			return new VoidUnhandled<AccessorParseException>();
-		}
-		let innerPart: string = this.getAccessor().substring(1, this.getAccessor().length - 1);
+    private getLinkInnerExpression(): Expression {
+        return this.innerExpression;
+    }
+
+    public static checkFormat(accessor: string): boolean {
+        return (accessor.startsWith("[") && accessor.endsWith("]"));
+    }
+
+    public static parse(accessor: string): Unhandled<AccessorParseException, ArrayFieldAccessor> {
+        if (!Checker.checkNotNull(accessor)) {
+            throw new IllegalArgumentException("Accessor can not be null!");
+        }
+        if (!ArrayFieldAccessor.checkFormat(accessor)) {
+            return new Unhandled<AccessorParseException, ArrayFieldAccessor>(new AccessorParseException("ArrayFieldAccessor must be surrounded by []!"));
+        }
+		let innerPart: string = accessor.substring(1, accessor.length - 1);
 		if (innerPart.length === 0) {
-			return new VoidUnhandled<AccessorParseException>(new AccessorParseException("Array accessor can not be empty!"));
+			return new Unhandled<AccessorParseException, ArrayFieldAccessor>(new AccessorParseException("Array accessor can not be empty!"));
 		}
         let innerExpression: Unhandled<AccessorParseException, Expression> = Accessor.parseExpression(innerPart);
         if (innerExpression.isThrown()) {
-            return new VoidUnhandled<AccessorParseException>(innerExpression.getException());
+            return new Unhandled<AccessorParseException, ArrayFieldAccessor>(innerExpression.getException());
         }
-        this.setLinkInnerExpression(innerExpression.get());
-		this.setParsed(true);
-        return new VoidUnhandled<AccessorParseException>();
-    }
-
-    isParsed(): boolean {
-        return this.parsed;
+        return new Unhandled<AccessorParseException, ArrayFieldAccessor>(new ArrayFieldAccessor(innerExpression.get()));
     }
 
     get(scope: Scope, field: Field): Unhandled<InvalidViewAccessException, Field> {

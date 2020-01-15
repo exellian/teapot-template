@@ -4,43 +4,44 @@ import Scope from '../view/Scope';
 import PrimitiveField from '../view/PrimitiveField';
 import InvalidViewAccessException from '../exception/InvalidViewAccessException';
 import AccessorParseException from '../exception/AccessorParseException';
-import VoidUnhandled from '../util/VoidUnhandled';
 import Field from '../view/Field';
 import Accessor from './Accessor';
+import Checker from '../util/Checker';
+import IllegalArgumentException from '../exception/IllegalArgumentException';
+import ExpressionPack from '../pack/ExpressionPack';
 
 export default class Brackets implements Expression {
 
-    private readonly accessor: string;
+    private readonly innerExpression: Expression;
 
-    private innerExpression: Expression;
-
-    private parsed: boolean;
-
-    private setParsed(parsed: boolean): void {
-        this.parsed = parsed;
-    }
-
-    public constructor(accessor: string) {
-        this.accessor = accessor;
-        this.setParsed(false);
-    }
-
-    parse(): VoidUnhandled<AccessorParseException> {
-        if (this.getAccessor().charAt(0) !== '(' || this.getAccessor().charAt(this.getAccessor().length - 1) !== ')') {
-			return new VoidUnhandled<AccessorParseException>();
-		}
-		let res: Unhandled<AccessorParseException, Expression> =
-            Accessor.parseExpression(this.getAccessor().substring(1, this.getAccessor().length - 1));
-
-        if (res.isThrown()) {
-            return new VoidUnhandled<AccessorParseException>(res.getException());
+    private constructor(innerExpression: Expression) {
+        if (!Checker.checkNotNull(innerExpression)) {
+            throw new IllegalArgumentException("Inner expression of Brackets can not be null!");
         }
-        this.setLinkInnerExpression(res.get());
-        this.setParsed(true);
-		return new VoidUnhandled<AccessorParseException>();
+        this.innerExpression = innerExpression;
     }
-    isParsed(): boolean {
-        return this.parsed;
+
+    pack(): ExpressionPack {
+        throw new Error("Method not implemented.");
+    }
+
+    public static checkFormat(accessor: string): boolean {
+        return (accessor.startsWith("(") && accessor.endsWith(")"));
+    }
+
+    public static parse(accessor: string): Unhandled<AccessorParseException, Brackets> {
+        if (!Checker.checkNotNull(accessor)) {
+            throw new IllegalArgumentException("Accessor can not be null!");
+        }
+        if (!Brackets.checkFormat(accessor)) {
+            return new Unhandled<AccessorParseException, Brackets>(new AccessorParseException("Brackets must be surrounded by ()!"));
+        }
+		let res: Unhandled<AccessorParseException, Expression> =
+            Accessor.parseExpression(accessor.substring(1, accessor.length - 1));
+        if (res.isThrown()) {
+            return new Unhandled<AccessorParseException, Brackets>(res.getException());
+        }
+		return new Unhandled<AccessorParseException, Brackets>(new Brackets(res.get()));
     }
 
     get(scope: Scope): Unhandled<InvalidViewAccessException, PrimitiveField> {
@@ -51,16 +52,8 @@ export default class Brackets implements Expression {
         return this.getLinkInnerExpression().getField(scope);
     }
 
-    public getLinkInnerExpression(): Expression {
+    private getLinkInnerExpression(): Expression {
         return this.innerExpression;
-    }
-
-    private setLinkInnerExpression(innerExpression: Expression): void {
-        this.innerExpression = innerExpression;
-    }
-
-    private getAccessor(): string {
-        return this.accessor;
     }
 
 }

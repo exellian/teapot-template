@@ -1,6 +1,6 @@
-import Pack from '../Pack';
 import AttributePack from './AttributePack';
-import AccessorPack from '../accessor/AccessorPack';
+import AccessorPack from './AccessorPack';
+import Pack from '../abstract/Pack';
 
 export default class RenderablePack extends Pack {
 
@@ -27,4 +27,8 @@ export default class RenderablePack extends Pack {
 
     //IF ANNOTATION
     public accessor: AccessorPack;
+
+    public toJSON(): string {
+        return JSON.stringify(this);
+    }
 }

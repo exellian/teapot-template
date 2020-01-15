@@ -1,8 +1,9 @@
-import Renderable from '../util/Renderable';
 import Scope from '../view/Scope';
 import RenderException from '../exception/RenderException';
 import Unhandled from '../util/Unhandled';
 import Attribute from './Attribute';
+import Renderable from './Renderable';
+import RenderablePack from '../pack/RenderablePack';
 
 export default class Tag implements Renderable {
 
@@ -14,6 +15,10 @@ export default class Tag implements Renderable {
         this.name = name;
         this.children = children;
         this.attributes = attributes;
+    }
+
+    pack(): RenderablePack {
+        throw new Error("Method not implemented.");
     }
 
     public getLinkChildren(): Renderable[] {

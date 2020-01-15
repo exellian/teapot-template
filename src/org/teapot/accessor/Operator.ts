@@ -1,16 +1,14 @@
 import Expression from './Expression';
 import AccessorParseException from '../exception/AccessorParseException';
-import Parsable from '../util/Parsable';
-import VoidUnhandled from '../util/VoidUnhandled';
 import Scope from '../view/Scope';
 import Unhandled from '../util/Unhandled';
 import InvalidViewAccessException from '../exception/InvalidViewAccessException';
 import PrimitiveField from '../view/PrimitiveField';
 import Field from '../view/Field';
-import StringParseException from '../exception/StringParseException';
-import NumberFormatException from '../exception/NumberFormatException';
-import BooleanParseException from '../exception/BooleanParseException';
 import Accessor from './Accessor';
+import Checker from '../util/Checker';
+import IllegalArgumentException from '../exception/IllegalArgumentException';
+import ExpressionPack from '../pack/ExpressionPack';
 
 export default class Operator implements Expression {
 
@@ -18,76 +16,76 @@ export default class Operator implements Expression {
     private static readonly POINTS: string[] = [ "*", "/" ];
     private static readonly LINES: string[] = [ "+", "-" ];
 
-    private readonly accessor: string;
+    private readonly operator: string;
+	private readonly left: Expression;
+	private readonly right: Expression;
 
-    private operator: string;
-	private left: Expression;
-	private right: Expression;
-
-    private parsed: boolean;
-
-    private setParsed(parsed: boolean): void {
-        this.parsed = parsed;
-    }
-
-    public constructor(accessor: string) {
-        this.accessor = accessor;
-        this.setParsed(false);
-    }
-
-    private setOperator(operator: string): void {
+    private constructor(operator: string, left: Expression, right: Expression) {
+        if (!Checker.checkNotNull(operator)) {
+            throw new IllegalArgumentException("operator can not be null!");
+        }
+        if (!Checker.checkNotNull(left)) {
+            throw new IllegalArgumentException("left expression of operator can not be null!");
+        }
+        if (!Checker.checkNotNull(right)) {
+            throw new IllegalArgumentException("right expression of operator can not be null!");
+        }
         this.operator = operator;
-    }
-
-    private setLinkLeft(left: Expression): void {
         this.left = left;
-    }
-
-    private setLinkRight(right: Expression): void {
         this.right = right;
     }
 
-    public getOperator(): string {
+    pack(): ExpressionPack {
+        throw new Error("Method not implemented.");
+    }
+
+    private getOperator(): string {
         return this.operator;
     }
 
-    public getLinkLeft(): Expression {
+    private getLinkLeft(): Expression {
         return this.left;
     }
 
-    public getLinkRight(): Expression {
+    private getLinkRight(): Expression {
         return this.right;
     }
 
-    private getAccessor(): string {
-        return this.accessor;
-    }
+    public static parse(accessor: string): Unhandled<AccessorParseException, [boolean, Operator]> {
+        if (!Checker.checkNotNull(accessor)) {
+            throw new IllegalArgumentException("Accessor can not be null!");
+        }
+        let parseResult: Unhandled<AccessorParseException, [boolean, string, Expression, Expression]> = null;
 
-    parse(): VoidUnhandled<AccessorParseException> {
-        let res0: Unhandled<AccessorParseException, boolean> = this.parseOperator(this.getAccessor(), Operator.BOOLEAN);
-        if (res0.isThrown()) {
-            return new VoidUnhandled<AccessorParseException>(res0.getException());
+        parseResult = Operator.parseOperator(accessor, Operator.BOOLEAN);
+        if (parseResult.isThrown()) {
+            return new Unhandled<AccessorParseException, [boolean, Operator]>(parseResult.getException());
         }
-        if (res0.get() === false) {
-            let res1: Unhandled<AccessorParseException, boolean> = this.parseOperator(this.getAccessor(), Operator.LINES);
-            if (res1.isThrown()) {
-                return new VoidUnhandled<AccessorParseException>(res0.getException());
+        if (parseResult.get()[0] === false) {
+            parseResult = Operator.parseOperator(accessor, Operator.LINES);
+            if (parseResult.isThrown()) {
+                return new Unhandled<AccessorParseException, [boolean, Operator]>(parseResult.getException());
             }
-            if (res1.get() === false) {
-                let res2: Unhandled<AccessorParseException, boolean> = this.parseOperator(this.getAccessor(), Operator.POINTS);
-                if (res2.isThrown()) {
-                    return new VoidUnhandled<AccessorParseException>(res0.getException());
+            if (parseResult.get()[0] === false) {
+                parseResult = Operator.parseOperator(accessor, Operator.POINTS);
+                if (parseResult.isThrown()) {
+                    return new Unhandled<AccessorParseException, [boolean, Operator]>(parseResult.getException());
                 }
-                if (res2.get() === false) {
-                    return new VoidUnhandled<AccessorParseException>();
+                if (parseResult.get()[0] === false) {
+                    return new Unhandled<AccessorParseException, [boolean, Operator]>([false, null]);
                 }
             }
         }
-        this.setParsed(true);
-        return new VoidUnhandled<AccessorParseException>();
-    }
-    isParsed(): boolean {
-        return this.parsed;
+        return new Unhandled<AccessorParseException, [boolean, Operator]>(
+            [
+                true,
+                new Operator(
+                    parseResult.get()[1],
+                    parseResult.get()[2],
+                    parseResult.get()[3]
+                )
+            ]
+        );
     }
 
     get(scope: Scope): Unhandled<InvalidViewAccessException, PrimitiveField> {
@@ -125,11 +123,12 @@ export default class Operator implements Expression {
 		}
 		throw new Error("Unknown State!");
     }
+
     getField(scope: Scope): Unhandled<InvalidViewAccessException, Field> {
         return this.get(scope);
     }
 
-    private parseOperator(accessor: string, operators: string[]): Unhandled<AccessorParseException, boolean> {
+    private static parseOperator(accessor: string, operators: string[]): Unhandled<AccessorParseException, [boolean, string, Expression, Expression]> {
 		var roundBracketDepth: number = 0;
 		var edgedBracketDepth: number = 0;
 		var inString: boolean = false;
@@ -160,23 +159,20 @@ export default class Operator implements Expression {
 							let left: string = accessor.substring(0, j);
 							let right: string = accessor.substring(j + operatorChars.length);
 							if (right.length === 0) {
-                                return new Unhandled<AccessorParseException, boolean>(new AccessorParseException("Right side of operator must exist!"));
+                                return new Unhandled<AccessorParseException, [boolean, string, Expression, Expression]>(new AccessorParseException("Right side of operator must exist!"));
 							}
 							if (left.length === 0) {
-                                return new Unhandled<AccessorParseException, boolean>(new AccessorParseException("Left side of operator must exist!"));
+                                return new Unhandled<AccessorParseException, [boolean, string, Expression, Expression]>(new AccessorParseException("Left side of operator must exist!"));
 							}
                             let leftRes: Unhandled<AccessorParseException, Expression> = Accessor.parseExpression(left);
                             let rightRes: Unhandled<AccessorParseException, Expression> = Accessor.parseExpression(right);
                             if (leftRes.isThrown()) {
-                                return new Unhandled<AccessorParseException, boolean>(leftRes.getException());
+                                return new Unhandled<AccessorParseException, [boolean, string, Expression, Expression]>(leftRes.getException());
                             }
                             if (rightRes.isThrown()) {
-                                return new Unhandled<AccessorParseException, boolean>(rightRes.getException());
+                                return new Unhandled<AccessorParseException, [boolean, string, Expression, Expression]>(rightRes.getException());
                             }
-                            this.setOperator(operator);
-							this.setLinkLeft(leftRes.get());
-							this.setLinkRight(rightRes.get());
-							return new Unhandled<AccessorParseException, boolean>(true);
+							return new Unhandled<AccessorParseException, [boolean, string, Expression, Expression]>([true, operator, leftRes.get(), rightRes.get()]);
 						}
 						k--;
 					}
@@ -184,9 +180,9 @@ export default class Operator implements Expression {
 			}
 		}
 		if (roundBracketDepth !== 0) {
-			throw new AccessorParseException("Rounded brackets not closed!");
+			return new Unhandled<AccessorParseException, [boolean, string, Expression, Expression]>(new AccessorParseException("Rounded brackets not closed!"));
 		}
-		return new Unhandled<AccessorParseException, boolean>(false);
+		return new Unhandled<AccessorParseException, [boolean, string, Expression, Expression]>([false, null, null, null]);
 	}
 
     private static bool(left: PrimitiveField, right: PrimitiveField): Unhandled<InvalidViewAccessException, PrimitiveField> {

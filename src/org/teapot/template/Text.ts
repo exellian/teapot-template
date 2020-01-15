@@ -1,7 +1,8 @@
-import Renderable from '../util/Renderable';
 import Scope from '../view/Scope';
 import RenderException from '../exception/RenderException';
 import Unhandled from '../util/Unhandled';
+import Renderable from './Renderable';
+import RenderablePack from '../pack/RenderablePack';
 
 export default class Text implements Renderable {
 
@@ -9,6 +10,10 @@ export default class Text implements Renderable {
 
     public constructor(text: string) {
         this.text = text;
+    }
+
+    pack(): RenderablePack {
+        throw new Error("Method not implemented.");
     }
 
     public getText(): string {

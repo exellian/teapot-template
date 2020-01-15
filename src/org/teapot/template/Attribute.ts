@@ -1,4 +1,7 @@
-export default class Attribute {
+import Packable from '../abstract/Packable';
+import AttributePack from '../pack/AttributePack';
+
+export default class Attribute implements Packable<AttributePack> {
 
     private readonly name: string;
     private readonly value: string;
@@ -6,6 +9,10 @@ export default class Attribute {
     public constructor(name: string, value: string) {
         this.name = name;
         this.value = value;
+    }
+
+    pack(): AttributePack {
+        throw new Error("Method not implemented.");
     }
 
     public getName(): string {

@@ -3,7 +3,7 @@ export default class PrimitiveFieldAccessor {
     private readonly accessor: number | string;
     private checked: boolean;
 
-    public constructor(accessor: number | string) {
+    constructor(accessor: number | string) {
 		this.accessor = accessor;
 		this.setChecked(false);
 	}

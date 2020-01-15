@@ -1,24 +1,26 @@
-import AnnotationFactory from './factory/AnnotationFactory';
 import Annotation from './Annotation';
-import Renderable from '../util/Renderable';
 import IfAnnotation from './IfAnnotation';
-import IfAnnotationFactory from './factory/IfAnnotationFactory';
-import ForAnnotationFactory from './factory/ForAnnotationFactory';
 import ForAnnotation from './ForAnnotation';
 import ClickAnnotation from './ClickAnnotation';
-import ClickAnnotationFactory from './factory/ClickAnnotationFactory';
-import HoverAnnotationFactory from './factory/HoverAnnotationFactory';
 import HoverAnnotation from './HoverAnnotation';
-import InputAnnotationFactory from './factory/InputAnnotationFactory';
 import InputAnnotation from './InputAnnotation';
+import IfAnnotationParser from './factory/IfAnnotationParser';
+import ForAnnotationParser from './factory/ForAnnotationParser';
+import ClickAnnotationParser from './factory/ClickAnnotationParser';
+import HoverAnnotationParser from './factory/HoverAnnotationParser';
+import InputAnnotationParser from './factory/InputAnnotationParser';
+import AnnotationParser from './factory/AnnotationParser';
+import TemplateParseException from '../exception/TemplateParseException';
+import Unhandled from '../util/Unhandled';
+import Renderable from '../template/Renderable';
 
 export default class AnnotationType<T extends Annotation> {
 
-    public static readonly IF = new AnnotationType<IfAnnotation>("if", new IfAnnotationFactory());
-    public static readonly FOR = new AnnotationType<ForAnnotation>("for", new ForAnnotationFactory());
-    public static readonly CLICK = new AnnotationType<ClickAnnotation>("click", new ClickAnnotationFactory());
-    public static readonly HOVER = new AnnotationType<HoverAnnotation>("hover", new HoverAnnotationFactory());
-    public static readonly INPUT = new AnnotationType<InputAnnotation>("for", new InputAnnotationFactory());
+    public static readonly IF = new AnnotationType<IfAnnotation>("if", new IfAnnotationParser());
+    public static readonly FOR = new AnnotationType<ForAnnotation>("for", new ForAnnotationParser());
+    public static readonly CLICK = new AnnotationType<ClickAnnotation>("click", new ClickAnnotationParser());
+    public static readonly HOVER = new AnnotationType<HoverAnnotation>("hover", new HoverAnnotationParser());
+    public static readonly INPUT = new AnnotationType<InputAnnotation>("for", new InputAnnotationParser());
 
     private static readonly VALUES: AnnotationType<any>[] = [
         AnnotationType.IF,
@@ -29,9 +31,9 @@ export default class AnnotationType<T extends Annotation> {
     ];
 
     private readonly name: string;
-    private readonly factory: AnnotationFactory<T>;
+    private readonly factory: AnnotationParser<T>;
 
-    private constructor(name: string, factory: AnnotationFactory<T>) {
+    private constructor(name: string, factory: AnnotationParser<T>) {
         this.name = name;
         this.factory = factory;
     }
@@ -40,12 +42,12 @@ export default class AnnotationType<T extends Annotation> {
         return this.name;
     }
 
-    private getFactory(): AnnotationFactory<T> {
+    private getLinkFactory(): AnnotationParser<T> {
         return this.factory;
     }
 
-    public newInstance(expression: string, next: Renderable): T {
-        return this.getFactory().newInstance(expression, next);
+    public newInstance(expression: string, next: Renderable): Unhandled<TemplateParseException, T> {
+        return this.getLinkFactory().parse(expression, next);
     }
 
     public static getValues(): AnnotationType<any>[] {

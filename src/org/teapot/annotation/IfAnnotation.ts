@@ -1,62 +1,58 @@
 import Annotation from './Annotation';
-import Renderable from '../util/Renderable';
 import Scope from '../view/Scope';
 import TemplateParseException from '../exception/TemplateParseException';
-import VoidUnhandled from '../util/VoidUnhandled';
 import Accessor from '../accessor/Accessor';
 import AccessorParseException from '../exception/AccessorParseException';
 import Unhandled from '../util/Unhandled';
 import TemplateRenderException from '../exception/TemplateRenderException';
 import InvalidViewAccessException from '../exception/InvalidViewAccessException';
 import PrimitiveField from '../view/PrimitiveField';
+import Checker from '../util/Checker';
+import IllegalArgumentException from '../exception/IllegalArgumentException';
+import Renderable from '../template/Renderable';
+import RenderablePack from '../pack/RenderablePack';
 
 export default class IfAnnotation extends Annotation {
 
-    private readonly expression: string;
-    private parsed: boolean;
+    private readonly accessor: Accessor;
 
-    private accessor: Accessor;
-
-    public constructor(expression: string, next: Renderable) {
+    private constructor(accessor: Accessor, next: Renderable) {
+        if (Checker.checkNotNull(accessor)) {
+            throw new IllegalArgumentException("Accessor can not be null!");
+        }
+        if (Checker.checkNotNull(next)) {
+            throw new IllegalArgumentException("Next can not be null!");
+        }
         super(next);
-        this.expression = expression;
-        this.setParsed(false);
-    }
-
-    private setParsed(parsed: boolean): void {
-        this.parsed = parsed;
-    }
-
-    private getExpression(): string {
-        return this.expression;
-    }
-
-    private setAccessor(accessor: Accessor): void {
         this.accessor = accessor;
     }
 
-    public getAccessor(): Accessor {
+    pack(): RenderablePack {
+        throw new Error("Method not implemented.");
+    }
+
+    private getLinkAccessor(): Accessor {
         return this.accessor;
     }
 
-    parse(): VoidUnhandled<TemplateParseException> {
-        let accessor: Accessor = new Accessor(this.getExpression());
-        let res: VoidUnhandled<AccessorParseException> = accessor.parse();
-        if (res.isThrown()) {
-            return new VoidUnhandled<TemplateParseException>(res.get());
-        }
-        this.setAccessor(accessor);
-        this.setParsed(true);
-        return new VoidUnhandled<TemplateParseException>();
-    }
-    isParsed(): boolean {
-        return this.parsed;
-    }
+    public static parse(expression: string, next: Renderable): Unhandled<TemplateParseException, IfAnnotation> {
 
+        if (Checker.checkNotNull(expression)) {
+            throw new IllegalArgumentException("Expression can not be null!");
+        }
+        if (Checker.checkNotNull(next)) {
+            throw new IllegalArgumentException("Next can not be null!");
+        }
+        let accessor: Unhandled<AccessorParseException, Accessor> = Accessor.parse(expression);
+        if (accessor.isThrown()) {
+            return new Unhandled<TemplateParseException, IfAnnotation>(accessor.getException());
+        }
+        return new Unhandled<TemplateParseException, IfAnnotation>(new IfAnnotation(accessor.get(), next));
+    }
     protected render0(scope: Scope, next: Renderable): Unhandled<TemplateRenderException, Node> {
 
         let condition: Unhandled<InvalidViewAccessException, PrimitiveField>
-            = this.getAccessor().getPrimitveField(scope);
+            = this.getLinkAccessor().getPrimitveField(scope);
         if (condition.isThrown()) {
             return new Unhandled<TemplateRenderException, Node>(condition.getException());
         }

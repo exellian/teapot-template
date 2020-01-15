@@ -1,6 +1,4 @@
-import Parsable from '../util/Parsable';
 import AccessorParseException from '../exception/AccessorParseException';
-import VoidUnhandled from '../util/VoidUnhandled';
 import Unhandled from '../util/Unhandled';
 import Expression from './Expression';
 import Scope from '../view/Scope';
@@ -11,49 +9,35 @@ import Value from './Value';
 import Brackets from './Brackets';
 import Operator from './Operator';
 import Property from './Property';
+import IllegalArgumentException from '../exception/IllegalArgumentException';
+import Checker from '../util/Checker';
+import AccessorPack from '../pack/AccessorPack';
+import Packable from '../abstract/Packable';
 
-export default class Accessor implements Parsable<AccessorParseException> {
+export default class Accessor implements Packable<AccessorPack> {
 
-    private readonly accessor: string;
-    private parsed: boolean;
+    private readonly expression: Expression;
 
-    private expression: Expression;
-
-    private setParsed(parsed: boolean): void {
-        this.parsed = parsed;
-    }
-
-	public constructor(accessor: string) {
-        if (accessor === null || accessor === undefined) {
-            throw new Error("Accessor can not be null or undefined!");
+	private constructor(expression: Expression) {
+        if (!Checker.checkNotNull(expression)) {
+            throw new IllegalArgumentException("Given expression can not be null!");
         }
-        this.accessor = accessor;
-        this.setParsed(false);
+        this.expression = expression;
 	}
 
-    private getAccessor(): string {
-        return this.accessor;
+    pack(): AccessorPack {
+        throw new Error("Method not implemented.");
     }
 
-    private setLinkExpression(expression: Expression): void {
-        this.expression = expression;
-    }
-
-    public getLinkExpression(): Expression {
-        return this.expression;
-    }
-
-    parse(): VoidUnhandled<AccessorParseException> {
-        let res: Unhandled<AccessorParseException, Expression> = Accessor.parsePrepareAndExpression(this.getAccessor());
-        if (res.isThrown()) {
-            return new VoidUnhandled<AccessorParseException>(res.getException());
+    public static parse(accessor: string): Unhandled<AccessorParseException, Accessor> {
+        if (!Checker.checkNotNull(accessor)) {
+            throw new IllegalArgumentException("Given accessor can not be null!");
         }
-        this.setLinkExpression(res.get());
-        this.setParsed(true);
-        return new VoidUnhandled<AccessorParseException>();
-    }
-    isParsed(): boolean {
-        return this.parsed;
+        let res: Unhandled<AccessorParseException, Expression> = Accessor.parsePrepareAndExpression(accessor);
+        if (res.isThrown()) {
+            return new Unhandled<AccessorParseException, Accessor>(res.getException());
+        }
+        return new Unhandled<AccessorParseException, Accessor>(new Accessor(res.get()));
     }
 
 	private static parsePrepareAndExpression(accessor: string): Unhandled<AccessorParseException, Expression> {
@@ -65,46 +49,31 @@ export default class Accessor implements Parsable<AccessorParseException> {
 		if (accessor.length === 0) {
 			return new Unhandled<AccessorParseException, Expression>(new AccessorParseException("Accessor can not be empty!"));
 		}
-		var res: VoidUnhandled<AccessorParseException> = null;
 
-		let expression0: Value = new Value(accessor);
-        res = expression0.parse();
-        if (res.isThrown()) {
-            return new Unhandled<AccessorParseException, Expression>(res.get());
+        let valueExpression: [boolean, Value] = Value.parse(accessor);
+        if (valueExpression[0] === true) {
+            return new Unhandled<AccessorParseException, Expression>(valueExpression[1]);
         }
-        if (expression0.isParsed()) {
-            return new Unhandled<AccessorParseException, Expression>(expression0);
+        if (Brackets.checkFormat(accessor)) {
+            return Brackets.parse(accessor);
         }
-        let expression1: Brackets = new Brackets(accessor);
-        res = expression1.parse();
-        if (res.isThrown()) {
-            return new Unhandled<AccessorParseException, Expression>(res.get());
+        let operatorExpression: Unhandled<AccessorParseException, [boolean, Operator]> = Operator.parse(accessor);
+        if (operatorExpression.isThrown()) {
+            return new Unhandled<AccessorParseException, Expression>(operatorExpression.getException());
         }
-        if (expression1.isParsed()) {
-            return new Unhandled<AccessorParseException, Expression>(expression1);
+        if (operatorExpression.get()[0] === true) {
+            return new Unhandled<AccessorParseException, Expression>(operatorExpression.get()[1]);
         }
-        let expression2: Operator = new Operator(accessor);
-        res = expression2.parse();
-        if (res.isThrown()) {
-            return new Unhandled<AccessorParseException, Expression>(res.get());
+        let propertyExpression: Unhandled<AccessorParseException, Property> = Property.parse(accessor);
+        if (propertyExpression.isThrown()) {
+            return new Unhandled<AccessorParseException, Expression>(propertyExpression.getException());
         }
-        if (expression2.isParsed()) {
-            return new Unhandled<AccessorParseException, Expression>(expression2);
-        }
-        let expression3: Property = new Property(accessor);
-        res = expression3.parse();
-        if (res.isThrown()) {
-            return new Unhandled<AccessorParseException, Expression>(res.get());
-        }
-        if (expression3.isParsed()) {
-            return new Unhandled<AccessorParseException, Expression>(expression3);
-        }
-        return new Unhandled<AccessorParseException, Expression>(new AccessorParseException("No expression found for accessor!"));
+        return new Unhandled<AccessorParseException, Expression>(propertyExpression.get());
 	}
 
 	private static prepareAccessor(accessorName: string): string {
-		var builder: string = "";
-		var inString: boolean = false;
+		let builder: string = "";
+		let inString: boolean = false;
 		for (let c of accessorName.split("")) {
 			if (c === '"') {
 				inString = !inString;
@@ -119,6 +88,10 @@ export default class Accessor implements Parsable<AccessorParseException> {
 		}
 		return builder;
 	}
+
+    private getLinkExpression(): Expression {
+        return this.expression;
+    }
 
     public get(scope: Scope): Unhandled<InvalidViewAccessException, any> {
         let res: Unhandled<InvalidViewAccessException, PrimitiveField> = this.getPrimitveField(scope);

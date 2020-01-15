@@ -1,5 +1,5 @@
-import Pack from '../Pack';
 import ExpressionPack from './ExpressionPack';
+import Pack from '../abstract/Pack';
 
 export default class FieldAccessorPack extends Pack {
 
@@ -11,4 +11,8 @@ export default class FieldAccessorPack extends Pack {
 
     //OBJECTFIELDACCESSOR
     public accessor: string;
+
+    public toJSON(): string {
+        return JSON.stringify(this);
+    }
 }

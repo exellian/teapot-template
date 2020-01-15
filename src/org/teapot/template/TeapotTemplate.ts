@@ -1,8 +1,6 @@
-import Renderable from '../util/Renderable';
 import Scope from '../view/Scope';
 import Unhandled from '../util/Unhandled';
 import VoidUnhandled from '../util/VoidUnhandled';
-import Parsable from '../util/Parsable';
 import TemplateParseException from '../exception/TemplateParseException';
 import Runtime from '../util/Runtime';
 import Text from './Text';
@@ -11,61 +9,51 @@ import TemplateRenderException from '../exception/TemplateRenderException';
 import AnnotationType from '../annotation/AnnotationType';
 import Annotation from '../annotation/Annotation';
 import Attribute from './Attribute';
+import Renderable from './Renderable';
+import Template from '../abstract/Template';
+import TeapotTemplatePack from '../pack/TeapotTemplatePack';
+import Checker from '../util/Checker';
+import IllegalArgumentException from '../exception/IllegalArgumentException';
 
-export default class Template implements Parsable<TemplateParseException> {
+export default class TeapotTemplate implements Template<TeapotTemplatePack> {
 
-    private readonly html: string;
-    private parsed: boolean;
+    private readonly root: Renderable;
 
-    private root: Renderable;
-
-    public constructor(html: string) {
-        this.html = html;
-        this.setParsed(false);
-    }
-
-    public static from(renderable: Renderable): Template {
-        let o: Template = new Template(null);
-        o.parsed = true;
-        o.root = renderable;
-        return o;
-    }
-
-    private getHtml(): string {
-        return this.html;
-    }
-
-    public setLinkRoot(root: Renderable): void {
+    private constructor(root: Renderable) {
+        if (!Checker.checkNotNull(root)) {
+            throw new IllegalArgumentException("Root can not be null!");
+        }
         this.root = root;
     }
 
-    public getLinkRoot(): Renderable {
+    pack(): TeapotTemplatePack {
+        throw new Error("Method not implemented.");
+    }
+
+    private getLinkRoot(): Renderable {
         return this.root;
     }
 
-    private setParsed(parsed: boolean): void {
-        this.parsed = parsed;
-    }
+    public static parse(html: string): Unhandled<TemplateParseException, TeapotTemplate> {
 
-    parse(): VoidUnhandled<TemplateParseException> {
-
-        let element: ChildNode = Template.parseHtml(this.getHtml());
+        if (!Checker.checkNotNull(html)) {
+            throw new IllegalArgumentException("Html can not be null!");
+        }
+        let element: ChildNode = TeapotTemplate.parseHtml(html);
 
         console.time('parseNode');
 
 
-        let renderRes: Unhandled<TemplateParseException, Renderable> = this.parseNode(element);
-        if (renderRes.isThrown()) {
-            return new VoidUnhandled<TemplateParseException>(renderRes.getException());
+        let render: Unhandled<TemplateParseException, Renderable> = TeapotTemplate.parseNode(element);
+        if (render.isThrown()) {
+            return new Unhandled<TemplateParseException, TeapotTemplate>(render.getException());
         }
-        this.setLinkRoot(renderRes.get());
-        this.setParsed(true);
 
         console.timeEnd('parseNode');
-        return new VoidUnhandled<TemplateParseException>();
+        return new Unhandled<TemplateParseException, TeapotTemplate>(new TeapotTemplate(render.get()));
     }
 
-    private parseNode(element: ChildNode): Unhandled<TemplateParseException, Renderable> {
+    private static parseNode(element: ChildNode): Unhandled<TemplateParseException, Renderable> {
         if (element.nodeType == 3) {
             return new Unhandled<TemplateParseException, Renderable>(new Text(element.nodeValue));
         }
@@ -114,7 +102,7 @@ export default class Template implements Parsable<TemplateParseException> {
                 let htmlElement: HTMLElement = <HTMLElement>element;
 
                 for (var i = 0; i < htmlElement.attributes.length; i++) {
-                    if (Template.hasAttribute(attributes, htmlElement.attributes[i].nodeName)) {
+                    if (TeapotTemplate.hasAttribute(attributes, htmlElement.attributes[i].nodeName)) {
                         continue;
                     }
                     attributes.push(new Attribute(htmlElement.attributes[i].nodeName, htmlElement.attributes[i].nodeValue));
@@ -133,7 +121,7 @@ export default class Template implements Parsable<TemplateParseException> {
         return false;
     }
 
-    private parseAnnotations(text: string, tag: Renderable): Unhandled<TemplateParseException, Renderable> {
+    private static parseAnnotations(text: string, tag: Renderable): Unhandled<TemplateParseException, Renderable> {
         let globalPattern: RegExp = /(@\s*[A-Za-z]*\s*\(.+\)\s*)+/;
         let match: RegExpExecArray = globalPattern.exec(text);
         if (!match) {
@@ -164,19 +152,15 @@ export default class Template implements Parsable<TemplateParseException> {
         return new Unhandled<TemplateParseException, Renderable>(tag);
     }
 
-    isParsed(): boolean {
-        return this.parsed;
-    }
-
     public render(scope: Scope): Unhandled<TemplateRenderException, Node> {
         return this.getLinkRoot().render(scope);
     }
 
     private static parseHtml(html: string): ChildNode {
         if (Runtime.isNodeJS()) {
-            return Template.parseHtmlNodeJS(html);
+            return TeapotTemplate.parseHtmlNodeJS(html);
         }
-        return Template.parseHtmlBrowser(html);
+        return TeapotTemplate.parseHtmlBrowser(html);
     }
 
     private static parseHtmlBrowser(html: string): ChildNode {
