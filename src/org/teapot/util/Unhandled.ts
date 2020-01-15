@@ -15,6 +15,7 @@ export default class Unhandled<E extends Exception, T> {
         }
         this.result = result;
     }
+    
 
     public isThrown(): boolean {
         this.setChecked(true);
