@@ -5,9 +5,4 @@ export default class AccessorPack extends Pack {
 
     public expression: ExpressionPack;
 
-    public toJSON(): string {
-        return JSON.stringify(this);
-    }
-
-
 }

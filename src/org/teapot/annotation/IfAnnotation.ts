@@ -33,6 +33,7 @@ export default class IfAnnotation extends Annotation {
     pack(): RenderablePack {
         let pack: RenderablePack = new RenderablePack(TeapotPackType.IF);
         pack.accessor = this.getLinkAccessor().pack();
+        pack.next = this.getLinkNext().pack();
         return pack;
     }
 

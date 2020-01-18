@@ -28,7 +28,4 @@ export default class RenderablePack extends Pack {
     //IF ANNOTATION
     public accessor: AccessorPack;
 
-    public toJSON(): string {
-        return JSON.stringify(this);
-    }
 }

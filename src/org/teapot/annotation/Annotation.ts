@@ -14,7 +14,7 @@ export default abstract class Annotation implements Renderable {
         this.next = next;
     }
 
-    private getLinkNext(): Renderable {
+    protected getLinkNext(): Renderable {
         return this.next;
     }
 

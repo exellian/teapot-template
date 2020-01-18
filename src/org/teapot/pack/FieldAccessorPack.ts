@@ -12,7 +12,4 @@ export default class FieldAccessorPack extends Pack {
     //OBJECTFIELDACCESSOR
     public accessor: string;
 
-    public toJSON(): string {
-        return JSON.stringify(this);
-    }
 }

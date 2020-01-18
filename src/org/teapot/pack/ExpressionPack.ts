@@ -17,7 +17,4 @@ export default class ExpressionPack extends Pack {
     //VALUE
     public value: number | string | boolean;
 
-    public toJSON(): string {
-        return JSON.stringify(this);
-    }
 }

@@ -1,6 +1,6 @@
 export default class Checker {
 
     public static checkNotNull<T>(object: T): boolean {
-        return object !== null;
+        return object !== null && object !== undefined;
     }
 }

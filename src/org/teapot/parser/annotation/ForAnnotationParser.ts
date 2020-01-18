@@ -78,11 +78,12 @@ export default class ForAnnotationParser implements AnnotationParser<ForAnnotati
 
             let definitionAccessorRes: Unhandled<AccessorParseException, Accessor> = AccessorParser.parse(definitionParts[1]);
             if (definitionAccessorRes.isThrown()) {
-                return new Unhandled<TemplateParseException, ForAnnotation>(definitionAccessorRes.getException());
+                return new Unhandled<TemplateParseException, ForAnnotation>(new TemplateParseException(definitionAccessorRes.getException()));
             }
             definitionAccessor = definitionAccessorRes.get();
         }
 
+        increment = ForAnnotationParser.replaceIncrement(increment);
         let incrementEqualsIndex: number = increment.indexOf('=');
         if (incrementEqualsIndex === -1) {
             return new Unhandled<TemplateParseException, ForAnnotation>(new TemplateParseException("For increment must contain an assignment!"));
@@ -106,6 +107,10 @@ export default class ForAnnotationParser implements AnnotationParser<ForAnnotati
             return new Unhandled<TemplateParseException, ForAnnotation>(new TemplateParseException(forAnnotation.getException()));
         }
         return new Unhandled<TemplateParseException, ForAnnotation>(forAnnotation.get());
+    }
+
+    private static replaceIncrement(increment: string): string {
+        return increment.split("i++").join("i=i+1").split("++i").join("i=i+1").split("i--").join("i=i-1").split("--i").join("i=i-1");
     }
 
 }

@@ -38,6 +38,7 @@ export default class TeapotUnpacker implements Unpacker<TeapotTemplate, TeapotTe
         if (pack.type !== TeapotPackType.TEMPLATE) {
             return new Unhandled<UnpackException, TeapotTemplate>(new UnpackException(new IllegalArgumentException("Teapot template pack type invalid!")));
         }
+
         let renderable: Unhandled<UnpackException, Renderable> = TeapotUnpacker.fromRenderablePack(pack.root);
         if (renderable.isThrown()) {
             return new Unhandled<UnpackException, TeapotTemplate>(new UnpackException(renderable.getException()));

@@ -1,36 +1,53 @@
-import * as fs from "fs";
+import { TeapotTemplateEngine } from "./org/teapot/TeapotTemplateEngine";
+import Unhandled from './org/teapot/util/Unhandled';
 import TemplateParseException from './org/teapot/exception/TemplateParseException';
 import TeapotTemplate from './org/teapot/template/TeapotTemplate';
-import Unhandled from './org/teapot/util/Unhandled';
-import TeapotParser from './org/teapot/parser/TeapotParser';
+import ObjectField from './org/teapot/view/ObjectField';
+import PrimitiveField from './org/teapot/view/PrimitiveField';
+import View from './org/teapot/view/View';
+import TeapotTemplatePack from './org/teapot/pack/TeapotTemplatePack';
+import UnpackException from './org/teapot/exception/UnpackException';
 
-class IO {
 
-    public static listFiles(dir: string): string[] {
-        var results: string[] = [];
-        var list: string[] = fs.readdirSync(dir);
-        for (let key in list) {
-            let file: string = list[key];
-            file = dir + '/' + file;
-            var stat: fs.Stats = fs.statSync(file);
-            if (stat && stat.isDirectory()) {
-                results = results.concat(IO.listFiles(file));
-            } else {
-                results.push(file);
-            }
-        }
-        return results;
+
+var main = function() {
+
+    let html = "<div>" +
+                    "@for(int i = 0;i < 10;i++)" +
+                    "<div>@(test) @(i)</div>" +
+               "</div>";
+
+    let engine: TeapotTemplateEngine = new TeapotTemplateEngine;
+
+    let templateParseResult: Unhandled<TemplateParseException, TeapotTemplate> = engine.parse(html);
+
+    if (templateParseResult.isThrown()) {
+        throw templateParseResult.getException();
     }
+
+    let template: TeapotTemplate = templateParseResult.get();
+
+    let viewObject: ObjectField = new ObjectField();
+
+    viewObject.setLinkField("test", new PrimitiveField("Hallo Welt!"));
+
+    let view: View = new View(viewObject);
+
+    let pack: TeapotTemplatePack = template.pack();
+
+    console.log(JSON.stringify(pack));
+
+    let unpackedTemplate: Unhandled<UnpackException, TeapotTemplate> = engine.fromPack(pack);
+
+    if (unpackedTemplate.isThrown()) {
+        throw unpackedTemplate.getException();
+    }
+
+    let pack1: TeapotTemplatePack = unpackedTemplate.get().pack();
+
+    console.log("");
+
+    console.log(JSON.stringify(pack1));
 }
 
-let files: string[] = IO.listFiles(__dirname);
-for (let key in files) {
-    let file = files[key];
-    if (file.endsWith(".html")) {
-        let t: Unhandled<TemplateParseException, TeapotTemplate> = new TeapotParser().parse(fs.readFileSync(file).toString());
-
-        console.time('parse');
-
-        console.timeEnd('parse');
-    }
-}
+main();

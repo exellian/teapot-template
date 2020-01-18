@@ -11,8 +11,6 @@ export default abstract class Pack {
         this.type = type;
     }
 
-    public abstract toJSON(): string;
-
     private static checkType(type: number): boolean {
         return Number.isInteger(type) && type >= 0;
     }

@@ -69,11 +69,11 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
                         if (lastText !== null) {
                             let parseRes: Unhandled<TemplateParseException, Renderable>
                                 = TeapotParser.parseAnnotations(lastText.getText(), rendered);
-                            if (parseRes.isThrown()) {
-                                parseRes.reset();
-                                return parseRes;
+                            if (!parseRes.isThrown()) {
+                                //TODO slice out annotations
+                                children.pop();
+                                rendered = parseRes.get();
                             }
-                            rendered = parseRes.get();
                         }
                     }
                     children.push(rendered);

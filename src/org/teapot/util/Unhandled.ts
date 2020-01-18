@@ -8,14 +8,14 @@ export default class Unhandled<E extends Exception, T> {
 
     public constructor(result: E | T) {
         this.setChecked(false);
-        if (result instanceof Exception) {
+        if (result instanceof Error) {
             this.exception = true;
         } else {
             this.exception = false;
         }
         this.result = result;
     }
-    
+
 
     public isThrown(): boolean {
         this.setChecked(true);

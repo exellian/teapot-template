@@ -78,13 +78,14 @@ export default class ForAnnotation extends Annotation {
     pack(): RenderablePack {
         let pack: RenderablePack = new RenderablePack(TeapotPackType.FOR);
         pack.iterator = this.isIterator();
-        pack.iterable = this.getLinkIterable().pack();
+        pack.iterable = (this.getLinkIterable() === null) ? null : this.getLinkIterable().pack();
         pack.variable = this.getVariable();
-        pack.definition = this.getLinkDefinition().pack();
-        pack.condition = this.getLinkCondition().pack();
-        pack.increment = this.getLinkIncrement().pack();
+        pack.definition = (this.getLinkDefinition() === null) ? null : this.getLinkDefinition().pack();
+        pack.condition = (this.getLinkCondition() === null) ? null : this.getLinkCondition().pack();
+        pack.increment = (this.getLinkIncrement() === null) ? null : this.getLinkIncrement().pack();
         pack.definitionVariable = this.getDefinitionVariable();
         pack.incrementVariable = this.getIncrementVariable();
+        pack.next = this.getLinkNext().pack();
         return pack;
     }
 

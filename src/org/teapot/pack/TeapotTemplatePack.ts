@@ -5,8 +5,5 @@ export default class TeapotTemplatePack extends Pack {
 
     public root: RenderablePack;
 
-    public toJSON(): string {
-        return JSON.stringify(this);
-    }
 
 }
