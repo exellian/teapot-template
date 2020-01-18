@@ -6,6 +6,8 @@ import Renderable from './Renderable';
 import RenderablePack from '../pack/RenderablePack';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import Checker from '../util/Checker';
+import TeapotPackType from '../pack/TeapotPackType';
+import AttributePack from '../pack/AttributePack';
 
 export default class Tag implements Renderable {
 
@@ -33,7 +35,20 @@ export default class Tag implements Renderable {
     }
 
     pack(): RenderablePack {
-        throw new Error("Method not implemented.");
+        let pack: RenderablePack = new RenderablePack(TeapotPackType.TAG);
+        let children: RenderablePack[] = [];
+        let attributes: AttributePack[] = [];
+
+        for (let child of this.getLinkChildren()) {
+            children.push(child.pack());
+        }
+        for (let attribute of this.getAttributes()) {
+            attributes.push(attribute.pack());
+        }
+        pack.name = this.getName();
+        pack.children = children;
+        pack.attributes = attributes;
+        return pack;
     }
 
     public getLinkChildren(): Renderable[] {

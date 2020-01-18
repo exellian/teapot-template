@@ -3,6 +3,7 @@ import AttributePack from '../pack/AttributePack';
 import Unhandled from '../util/Unhandled';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import Checker from '../util/Checker';
+import TeapotPackType from '../pack/TeapotPackType';
 
 export default class Attribute implements Packable<AttributePack> {
 
@@ -25,7 +26,10 @@ export default class Attribute implements Packable<AttributePack> {
     }
 
     pack(): AttributePack {
-        throw new Error("Method not implemented.");
+        let pack: AttributePack = new AttributePack(TeapotPackType.ATTRIBUTE);
+        pack.name = this.getName();
+        pack.value = this.getValue();
+        return pack;
     }
 
     public getName(): string {

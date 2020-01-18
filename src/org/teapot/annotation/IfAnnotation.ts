@@ -9,6 +9,7 @@ import Checker from '../util/Checker';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import Renderable from '../template/Renderable';
 import RenderablePack from '../pack/RenderablePack';
+import TeapotPackType from '../pack/TeapotPackType';
 
 export default class IfAnnotation extends Annotation {
 
@@ -30,7 +31,9 @@ export default class IfAnnotation extends Annotation {
     }
 
     pack(): RenderablePack {
-        throw new Error("Method not implemented.");
+        let pack: RenderablePack = new RenderablePack(TeapotPackType.IF);
+        pack.accessor = this.getLinkAccessor().pack();
+        return pack;
     }
 
     private getLinkAccessor(): Accessor {

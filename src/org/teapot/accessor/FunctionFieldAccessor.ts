@@ -9,6 +9,8 @@ import FunctionField from '../view/FunctionField';
 import Checker from '../util/Checker';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import FieldAccessorPack from '../pack/FieldAccessorPack';
+import TeapotPackType from '../pack/TeapotPackType';
+import ExpressionPack from '../pack/ExpressionPack';
 
 export default class FunctionFieldAccessor implements FieldAccessor {
 
@@ -26,7 +28,13 @@ export default class FunctionFieldAccessor implements FieldAccessor {
     }
 
     pack(): FieldAccessorPack {
-        throw new Error("Method not implemented.");
+        let pack: FieldAccessorPack = new FieldAccessorPack(TeapotPackType.FUNCTION_FIELD_ACCESSOR);
+        let packs: ExpressionPack[] = [];
+        for (let param of this.getLinkParameters()) {
+            packs.push(param.pack());
+        }
+        pack.parameters = packs;
+        return pack;
     }
 
     private getLinkParameters(): Expression[] {

@@ -5,6 +5,7 @@ import Renderable from './Renderable';
 import RenderablePack from '../pack/RenderablePack';
 import Checker from '../util/Checker';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
+import TeapotPackType from '../pack/TeapotPackType';
 
 export default class Text implements Renderable {
 
@@ -22,15 +23,17 @@ export default class Text implements Renderable {
     }
 
     pack(): RenderablePack {
-        throw new Error("Method not implemented.");
-    }
-
-    public getText(): string {
-        return this.text;
+        let pack: RenderablePack = new RenderablePack(TeapotPackType.TEXT);
+        pack.text = this.getText();
+        return pack;
     }
 
     render(_scope: Scope): Unhandled<RenderException, Node> {
         return new Unhandled<RenderException, Node>(document.createTextNode(this.getText()));
+    }
+
+    public getText(): string {
+        return this.text;
     }
 
 }

@@ -8,6 +8,7 @@ import IllegalArgumentException from '../exception/IllegalArgumentException';
 import Checker from '../util/Checker';
 import AccessorPack from '../pack/AccessorPack';
 import Packable from '../abstract/Packable';
+import TeapotPackType from '../pack/TeapotPackType';
 
 export default class Accessor implements Packable<AccessorPack> {
 
@@ -25,7 +26,9 @@ export default class Accessor implements Packable<AccessorPack> {
     }
 
     pack(): AccessorPack {
-        throw new Error("Method not implemented.");
+        let pack: AccessorPack = new AccessorPack(TeapotPackType.ACCESSOR);
+        pack.expression = this.getLinkExpression().pack();
+        return pack;
     }
 
     private getLinkExpression(): Expression {

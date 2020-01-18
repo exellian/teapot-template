@@ -8,6 +8,7 @@ import ObjectField from '../view/ObjectField';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import Checker from '../util/Checker';
 import FieldAccessorPack from '../pack/FieldAccessorPack';
+import TeapotPackType from '../pack/TeapotPackType';
 
 export default class ObjectFieldAccessor implements FieldAccessor {
 
@@ -28,7 +29,9 @@ export default class ObjectFieldAccessor implements FieldAccessor {
     }
 
     pack(): FieldAccessorPack {
-        throw new Error("Method not implemented.");
+        let pack: FieldAccessorPack = new FieldAccessorPack(TeapotPackType.OBJECT_FIELD_ACCESSOR);
+        pack.accessor = this.getAccessor();
+        return pack;
     }
 
     public getAccessor(): string {

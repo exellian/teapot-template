@@ -7,6 +7,7 @@ import Field from '../view/Field';
 import Checker from '../util/Checker';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import ExpressionPack from '../pack/ExpressionPack';
+import TeapotPackType from '../pack/TeapotPackType';
 
 export default class Operator implements Expression {
 
@@ -34,7 +35,11 @@ export default class Operator implements Expression {
     }
 
     pack(): ExpressionPack {
-        throw new Error("Method not implemented.");
+        let pack: ExpressionPack = new ExpressionPack(TeapotPackType.OPERATOR);
+        pack.operator = this.getOperator();
+        pack.left = this.getLinkLeft().pack();
+        pack.right = this.getLinkRight().pack();
+        return pack;
     }
 
     private getOperator(): string {

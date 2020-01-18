@@ -6,6 +6,7 @@ import Template from '../abstract/Template';
 import TeapotTemplatePack from '../pack/TeapotTemplatePack';
 import Checker from '../util/Checker';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
+import TeapotPackType from '../pack/TeapotPackType';
 
 export default class TeapotTemplate implements Template<TeapotTemplatePack> {
 
@@ -26,7 +27,9 @@ export default class TeapotTemplate implements Template<TeapotTemplatePack> {
     }
 
     pack(): TeapotTemplatePack {
-        throw new Error("Method not implemented.");
+        let pack: TeapotTemplatePack = new TeapotTemplatePack(TeapotPackType.TEMPLATE);
+        pack.root = this.getLinkRoot().pack();
+        return pack;
     }
 
     private getLinkRoot(): Renderable {

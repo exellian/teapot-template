@@ -8,6 +8,8 @@ import Field from '../view/Field';
 import Checker from '../util/Checker';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import ExpressionPack from '../pack/ExpressionPack';
+import TeapotPackType from '../pack/TeapotPackType';
+import FieldAccessorPack from '../pack/FieldAccessorPack';
 
 export default class Property implements Expression {
 
@@ -28,7 +30,13 @@ export default class Property implements Expression {
     }
 
 	pack(): ExpressionPack {
-		throw new Error("Method not implemented.");
+		let pack: ExpressionPack = new ExpressionPack(TeapotPackType.PROPERTY);
+		let packs: FieldAccessorPack[] = [];
+        for (let field of this.getLinkFields()) {
+            packs.push(field.pack());
+        }
+        pack.fields = packs;
+        return pack;
 	}
 
     private getLinkFields(): FieldAccessor[] {

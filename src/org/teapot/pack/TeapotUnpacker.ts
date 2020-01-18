@@ -31,7 +31,13 @@ import UnpackException from '../exception/UnpackException';
 
 export default class TeapotUnpacker implements Unpacker<TeapotTemplate, TeapotTemplatePack> {
 
-    from(pack: TeapotTemplatePack): Unhandled<UnpackException, TeapotTemplate> {
+    public from(pack: TeapotTemplatePack): Unhandled<UnpackException, TeapotTemplate> {
+        if (!Checker.checkNotNull(pack)) {
+            return new Unhandled<UnpackException, TeapotTemplate>(new UnpackException(new IllegalArgumentException("Pack can not be null!")));
+        }
+        if (pack.type !== TeapotPackType.TEMPLATE) {
+            return new Unhandled<UnpackException, TeapotTemplate>(new UnpackException(new IllegalArgumentException("Teapot template pack type invalid!")));
+        }
         let renderable: Unhandled<UnpackException, Renderable> = TeapotUnpacker.fromRenderablePack(pack.root);
         if (renderable.isThrown()) {
             return new Unhandled<UnpackException, TeapotTemplate>(new UnpackException(renderable.getException()));
@@ -142,6 +148,9 @@ export default class TeapotUnpacker implements Unpacker<TeapotTemplate, TeapotTe
         if (!Checker.checkNotNull(pack)) {
             return new Unhandled<UnpackException, Attribute>(new UnpackException(new IllegalArgumentException("Pack can not be null!")));
         }
+        if (pack.type !== TeapotPackType.ATTRIBUTE) {
+            return new Unhandled<UnpackException, Attribute>(new UnpackException(new IllegalArgumentException("Attribute pack type invalid!")));
+        }
         let attribute: Unhandled<IllegalArgumentException, Attribute> = Attribute.from(pack.name, pack.value);
         if (attribute.isThrown()) {
             return new Unhandled<UnpackException, Attribute>(new UnpackException(attribute.getException()));
@@ -167,6 +176,9 @@ export default class TeapotUnpacker implements Unpacker<TeapotTemplate, TeapotTe
     private static fromAccessorPack(pack: AccessorPack): Unhandled<UnpackException, Accessor> {
         if (!Checker.checkNotNull(pack)) {
             return new Unhandled<UnpackException, Accessor>(new UnpackException(new IllegalArgumentException("Pack can not be null!")));
+        }
+        if (pack.type !== TeapotPackType.ACCESSOR) {
+            return new Unhandled<UnpackException, Accessor>(new UnpackException(new IllegalArgumentException("Acccessor pack type invalid!")));
         }
         let expression: Unhandled<UnpackException, Expression> = TeapotUnpacker.fromExpressionPack(pack.expression);
         if (expression.isThrown()) {

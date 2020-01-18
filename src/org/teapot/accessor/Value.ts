@@ -7,6 +7,7 @@ import Field from '../view/Field';
 import Checker from '../util/Checker';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import ExpressionPack from '../pack/ExpressionPack';
+import TeapotPackType from '../pack/TeapotPackType';
 
 export default class Value implements Expression {
 
@@ -27,7 +28,9 @@ export default class Value implements Expression {
     }
 
     pack(): ExpressionPack {
-        throw new Error("Method not implemented.");
+        let pack: ExpressionPack = new ExpressionPack(TeapotPackType.VALUE);
+        pack.value = this.getValue();
+        return pack;
     }
 
     private getValue(): number | string | boolean {

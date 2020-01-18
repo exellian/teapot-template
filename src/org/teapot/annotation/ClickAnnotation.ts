@@ -4,6 +4,7 @@ import TemplateRenderException from '../exception/TemplateRenderException';
 import Unhandled from '../util/Unhandled';
 import Renderable from '../template/Renderable';
 import RenderablePack from '../pack/RenderablePack';
+import TeapotPackType from '../pack/TeapotPackType';
 
 export default class ClickAnnotation extends Annotation {
 

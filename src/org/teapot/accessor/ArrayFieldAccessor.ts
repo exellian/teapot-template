@@ -10,6 +10,7 @@ import PrimitiveFieldAccessor from './PrimitiveFieldAccessor';
 import Checker from '../util/Checker';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import FieldAccessorPack from '../pack/FieldAccessorPack';
+import TeapotPackType from '../pack/TeapotPackType';
 
 export default class ArrayFieldAccessor implements FieldAccessor {
 
@@ -27,7 +28,9 @@ export default class ArrayFieldAccessor implements FieldAccessor {
     }
 
     pack(): FieldAccessorPack {
-        throw new Error("Method not implemented.");
+        let pack: FieldAccessorPack = new FieldAccessorPack(TeapotPackType.ARRAY_FIELD_ACCESSOR);
+        pack.innerExpression = this.getLinkInnerExpression().pack();
+        return pack;
     }
 
     private getLinkInnerExpression(): Expression {

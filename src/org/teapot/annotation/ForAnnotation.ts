@@ -13,6 +13,7 @@ import Checker from '../util/Checker';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import RenderablePack from '../pack/RenderablePack';
 import Renderable from '../template/Renderable';
+import TeapotPackType from '../pack/TeapotPackType';
 
 export default class ForAnnotation extends Annotation {
 
@@ -75,7 +76,16 @@ export default class ForAnnotation extends Annotation {
     }
 
     pack(): RenderablePack {
-        throw new Error("Method not implemented.");
+        let pack: RenderablePack = new RenderablePack(TeapotPackType.FOR);
+        pack.iterator = this.isIterator();
+        pack.iterable = this.getLinkIterable().pack();
+        pack.variable = this.getVariable();
+        pack.definition = this.getLinkDefinition().pack();
+        pack.condition = this.getLinkCondition().pack();
+        pack.increment = this.getLinkIncrement().pack();
+        pack.definitionVariable = this.getDefinitionVariable();
+        pack.incrementVariable = this.getIncrementVariable();
+        return pack;
     }
 
     private getLinkCondition(): Accessor {
@@ -96,14 +106,12 @@ export default class ForAnnotation extends Annotation {
     private getVariable(): string {
         return this.variable;
     }
-    private getDefinitionletiable(): string {
+    private getDefinitionVariable(): string {
         return this.definitionVariable;
     }
-    private getIncrementletiable(): string {
+    private getIncrementVariable(): string {
         return this.incrementVariable;
     }
-
-
 
     protected render0(scope: Scope, next: Renderable): Unhandled<TemplateRenderException, Node> {
         let element: Node = document.createElement("div");
@@ -152,7 +160,7 @@ export default class ForAnnotation extends Annotation {
             if (!startValue.get().isInteger()) {
                 return new Unhandled<TemplateRenderException, Node>(new TemplateRenderException("For start value must be an integer!"));
             }
-            object.setLinkField(this.getDefinitionletiable(), startValue.get());
+            object.setLinkField(this.getDefinitionVariable(), startValue.get());
         }
 
         let newScope: Scope = scope.newScope(object);
@@ -179,7 +187,7 @@ export default class ForAnnotation extends Annotation {
             if (increment.isThrown()) {
                 return new Unhandled<TemplateRenderException, Node>(new TemplateParseException(increment.getException()));
             }
-            object.setLinkField(this.getIncrementletiable(), increment.get());
+            object.setLinkField(this.getIncrementVariable(), increment.get());
         }
         return new Unhandled<TemplateRenderException, Node>(parent);
     }
