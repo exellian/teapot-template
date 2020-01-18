@@ -7,27 +7,42 @@
  
 ```typescript
 
-let template: Template = new Template("<div>" +
-                                        "@for(int i = 0;i < 10;i++)" + 
-                                        "<div>@(test) @(i)</div>" +
-                                      "</div>");
+    let html = "<div>" +
+                    "@for(int i = 0;i < 10;i++)" +
+                    "<div>@(test) @(i)</div>" +
+               "</div>";
 
-let exception: VoidUnhandled<TemplateParseException> = template.parse();
+    let engine: TeapotTemplateEngine = new TeapotTemplateEngine;
 
-if (exception.isThrown()) {
- throw new Error(exception.get().getMessage());
-}
+    let templateParseResult: Unhandled<TemplateParseException, TeapotTemplate> = engine.parse(html);
 
-let viewObject: ObjectField = new ObjectField();
+    if (templateParseResult.isThrown()) {
+        throw templateParseResult.getException();
+    }
 
-viewObject.setLinkField("test", new PrimitiveField("Hallo Welt!"));
+    let template: TeapotTemplate = templateParseResult.get();
 
-let view: View = new View(viewObject);
+    let viewObject: ObjectField = new ObjectField();
 
-let element: Node = template.render(view);
+    viewObject.setLinkField("test", new PrimitiveField("Hallo Welt!"));
 
-document.getElementById("root").innerHTML = "";
-document.getElementById("root").appendChild(element);
+    let view: View = new View(viewObject);
+
+    let pack: TeapotTemplatePack = template.pack();
+
+    console.log(JSON.stringify(pack));
+
+    let unpackedTemplate: Unhandled<UnpackException, TeapotTemplate> = engine.fromPack(pack);
+
+    if (unpackedTemplate.isThrown()) {
+        throw unpackedTemplate.getException();
+    }
+
+    let pack1: TeapotTemplatePack = unpackedTemplate.get().pack();
+
+    console.log("");
+
+    console.log(JSON.stringify(pack1));
 
 
 ```
