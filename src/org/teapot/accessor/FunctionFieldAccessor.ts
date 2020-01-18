@@ -3,9 +3,7 @@ import Unhandled from '../util/Unhandled';
 import InvalidViewAccessException from '../exception/InvalidViewAccessException';
 import Field from '../view/Field';
 import Scope from '../view/Scope';
-import AccessorParseException from '../exception/AccessorParseException';
 import Expression from './Expression';
-import Accessor from './Accessor';
 import PrimitiveField from '../view/PrimitiveField';
 import FunctionField from '../view/FunctionField';
 import Checker from '../util/Checker';
@@ -17,10 +15,14 @@ export default class FunctionFieldAccessor implements FieldAccessor {
     private readonly parameters: Expression[];
 
     private constructor(parameters: Expression[]) {
-        if (!Checker.checkNotNull(parameters)) {
-            throw new IllegalArgumentException("Inner expression of Brackets can not be null!");
-        }
         this.parameters = parameters;
+    }
+
+    public static from(parameters: Expression[]): Unhandled<IllegalArgumentException, FunctionFieldAccessor> {
+        if (!Checker.checkNotNull(parameters)) {
+            return new Unhandled<IllegalArgumentException, FunctionFieldAccessor>(new IllegalArgumentException("Parameters of FunctionFieldAccessor can not be null!"));
+        }
+        return new Unhandled<IllegalArgumentException, FunctionFieldAccessor>(new FunctionFieldAccessor(parameters));
     }
 
     pack(): FieldAccessorPack {
@@ -29,29 +31,6 @@ export default class FunctionFieldAccessor implements FieldAccessor {
 
     private getLinkParameters(): Expression[] {
         return this.parameters;
-    }
-
-    public static checkFormat(accessor: string): boolean {
-        return (accessor.startsWith("(") && accessor.endsWith(")"));
-    }
-
-    public static parse(accessor: string): Unhandled<AccessorParseException, FunctionFieldAccessor> {
-        if (!Checker.checkNotNull(accessor)) {
-            throw new IllegalArgumentException("Accessor can not be null!");
-        }
-        if (!FunctionFieldAccessor.checkFormat(accessor)) {
-            return new Unhandled<AccessorParseException, FunctionFieldAccessor>(new AccessorParseException("FunctionFieldAccessor must be surrounded by ()!"));
-        }
-        let parameters: Expression[] = [];
-		let funcParts: string[] = FunctionFieldAccessor.split(accessor);
-		for (let param of funcParts) {
-            let expr: Unhandled<AccessorParseException, Expression> = Accessor.parseExpression(param);
-            if (expr.isThrown()) {
-                return new Unhandled<AccessorParseException, FunctionFieldAccessor>(expr.getException());
-            }
-			parameters.push(expr.get());
-		}
-		return new Unhandled<AccessorParseException, FunctionFieldAccessor>(new FunctionFieldAccessor(parameters));
     }
 
     get(scope: Scope, field: Field): Unhandled<InvalidViewAccessException, Field> {
@@ -74,31 +53,9 @@ export default class FunctionFieldAccessor implements FieldAccessor {
 		return new Unhandled<InvalidViewAccessException, Field>(returnField);
     }
 
-    private static split(accessor: string): string[] {
-
-		let parts: string[] = [];
-		let chars: string[] = accessor.split("");
-		let part: string = "";
-		let roundedBracketDepth: number = 0;
-		for (let c of chars) {
-			if (c === '(') {
-				roundedBracketDepth++;
-				continue;
-			} else if (c === ')' && --roundedBracketDepth === 0) {
-				if (part.length !== 0) {
-                    parts.push(part);
-					part = "";
-				}
-				continue;
-			} else if (c === ',' && roundedBracketDepth === 1) {
-				parts.push(part);
-				part = "";
-				continue;
-			}
-			part += c;
-		}
-		return parts;
-	}
+    public static checkFormat(accessor: string): boolean {
+        return (accessor.startsWith("(") && accessor.endsWith(")"));
+    }
 
 	private static checkFunctionField(field: Field): boolean {
 		return field instanceof FunctionField;

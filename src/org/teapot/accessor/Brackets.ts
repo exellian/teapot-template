@@ -3,9 +3,7 @@ import Unhandled from '../util/Unhandled';
 import Scope from '../view/Scope';
 import PrimitiveField from '../view/PrimitiveField';
 import InvalidViewAccessException from '../exception/InvalidViewAccessException';
-import AccessorParseException from '../exception/AccessorParseException';
 import Field from '../view/Field';
-import Accessor from './Accessor';
 import Checker from '../util/Checker';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import ExpressionPack from '../pack/ExpressionPack';
@@ -21,27 +19,15 @@ export default class Brackets implements Expression {
         this.innerExpression = innerExpression;
     }
 
+    public static from(innerExpression: Expression): Unhandled<IllegalArgumentException, Brackets> {
+        if (!Checker.checkNotNull(innerExpression)) {
+            return new Unhandled<IllegalArgumentException, Brackets>(new IllegalArgumentException("Inner expression of Brackets can not be null!"));
+        }
+        return new Unhandled<IllegalArgumentException, Brackets>(new Brackets(innerExpression));
+    }
+
     pack(): ExpressionPack {
         throw new Error("Method not implemented.");
-    }
-
-    public static checkFormat(accessor: string): boolean {
-        return (accessor.startsWith("(") && accessor.endsWith(")"));
-    }
-
-    public static parse(accessor: string): Unhandled<AccessorParseException, Brackets> {
-        if (!Checker.checkNotNull(accessor)) {
-            throw new IllegalArgumentException("Accessor can not be null!");
-        }
-        if (!Brackets.checkFormat(accessor)) {
-            return new Unhandled<AccessorParseException, Brackets>(new AccessorParseException("Brackets must be surrounded by ()!"));
-        }
-		let res: Unhandled<AccessorParseException, Expression> =
-            Accessor.parseExpression(accessor.substring(1, accessor.length - 1));
-        if (res.isThrown()) {
-            return new Unhandled<AccessorParseException, Brackets>(res.getException());
-        }
-		return new Unhandled<AccessorParseException, Brackets>(new Brackets(res.get()));
     }
 
     get(scope: Scope): Unhandled<InvalidViewAccessException, PrimitiveField> {

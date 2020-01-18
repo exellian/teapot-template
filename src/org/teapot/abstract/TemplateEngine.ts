@@ -1,25 +1,42 @@
 import Template from './Template';
-import { PackFactory } from './PackFactory';
 import Pack from './Pack';
+import Unpacker from './Unpacker';
+import Parser from './Parser';
+import UnpackException from '../exception/UnpackException';
+import Unhandled from '../util/Unhandled';
+import TemplateParseException from '../exception/TemplateParseException';
 
-export abstract class TemplateEngine<T extends Template<P>, P extends Pack, F extends PackFactory<T, P>> {
+export class TemplateEngine<T extends Template<P>, P extends Pack, D extends Parser<T, P>, F extends Unpacker<T, P>> {
 
-    private readonly packFactory: F;
+    private readonly unpacker: F;
+    private readonly parser: D;
 
-    protected constructor(packFactory: F) {
-        this.packFactory = packFactory;
+    protected constructor(parser: D, unpacker: F) {
+        this.parser = parser;
+        this.unpacker = unpacker;
     }
 
-    public abstract parse(html: string): T;
-
-    public fromPack(pack: P): T {
-        return this.getLinkPackFactory().from(pack);
+    public parse(html: string): Unhandled<TemplateParseException, T> {
+        return this.getLinkParser().parse(html);
     }
+
+    public fromPack(pack: P): Unhandled<UnpackException, T> {
+        return this.getLinkUnpacker().from(pack);
+    }
+
+    public fromJSON(json: string): Unhandled<UnpackException, T> {
+        return this.fromPack(JSON.parse(json));
+    }
+
     public toPack(template: T): P {
         return template.pack();
     }
 
-    private getLinkPackFactory(): F {
-        return this.packFactory;
+    private getLinkParser(): D {
+        return this.parser;
+    }
+
+    private getLinkUnpacker(): F {
+        return this.unpacker;
     }
 }

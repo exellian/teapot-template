@@ -5,7 +5,6 @@ import TemplateRenderException from '../exception/TemplateRenderException';
 import Unhandled from '../util/Unhandled';
 import Accessor from '../accessor/Accessor';
 import ObjectField from '../view/ObjectField';
-import AccessorParseException from '../exception/AccessorParseException';
 import InvalidViewAccessException from '../exception/InvalidViewAccessException';
 import Field from '../view/Field';
 import ArrayField from '../view/ArrayField';
@@ -19,14 +18,14 @@ export default class ForAnnotation extends Annotation {
 
     private readonly iterator: boolean;
 
-    private readonly condition: Accessor;
-    private readonly definition: Accessor;
-	private readonly increment: Accessor;
-    private readonly definitionVariable: string;
-	private readonly incrementVariable: string;
+    private readonly condition: Accessor | null;
+    private readonly definition: Accessor | null;
+	private readonly increment: Accessor | null;
+    private readonly definitionVariable: string | null;
+	private readonly incrementVariable: string | null;
 
-	private readonly iterable: Accessor;
-    private readonly variable: string;
+	private readonly iterable: Accessor | null;
+    private readonly variable: string | null;
 
     private constructor(iterator: boolean, condition: Accessor, definition: Accessor, increment: Accessor, definitionVariable: string, incrementVariable: string, iterable: Accessor, variable: string, next: Renderable) {
         super(next);
@@ -38,6 +37,41 @@ export default class ForAnnotation extends Annotation {
         this.incrementVariable = incrementVariable;
         this.iterable = iterable;
         this.variable = variable;
+    }
+
+    public static from(condition: Accessor, definition: Accessor, increment: Accessor, definitionVariable: string, incrementVariable: string, next: Renderable): Unhandled<IllegalArgumentException, ForAnnotation> {
+        if (!Checker.checkNotNull(condition)) {
+            return new Unhandled<IllegalArgumentException, ForAnnotation>(new IllegalArgumentException("Condition can not be null!"));
+        }/*
+        if (!Checker.checkNotNull(definition)) {
+            return new Unhandled<IllegalArgumentException, ForAnnotation>(new IllegalArgumentException("Definition can not be null!"));
+        }*/
+        if (!Checker.checkNotNull(increment)) {
+            return new Unhandled<IllegalArgumentException, ForAnnotation>(new IllegalArgumentException("Increment can not be null!"));
+        }
+        if (!Checker.checkNotNull(definitionVariable)) {
+            return new Unhandled<IllegalArgumentException, ForAnnotation>(new IllegalArgumentException("DefinitionVariable can not be null!"));
+        }
+        if (!Checker.checkNotNull(incrementVariable)) {
+            return new Unhandled<IllegalArgumentException, ForAnnotation>(new IllegalArgumentException("IncrementVariable can not be null!"));
+        }
+        if (!Checker.checkNotNull(next)) {
+            return new Unhandled<IllegalArgumentException, ForAnnotation>(new IllegalArgumentException("Next can not be null!"));
+        }
+        return new Unhandled<IllegalArgumentException, ForAnnotation>(new ForAnnotation(false, condition, definition, increment, definitionVariable, incrementVariable, null, null, next));
+    }
+
+    public static fromIterable(iterable: Accessor, variable: string, next: Renderable): Unhandled<IllegalArgumentException, ForAnnotation> {
+        if (!Checker.checkNotNull(iterable)) {
+            return new Unhandled<IllegalArgumentException, ForAnnotation>(new IllegalArgumentException("iterable can not be null!"));
+        }
+        if (!Checker.checkNotNull(variable)) {
+            return new Unhandled<IllegalArgumentException, ForAnnotation>(new IllegalArgumentException("Variable can not be null!"));
+        }
+        if (!Checker.checkNotNull(next)) {
+            return new Unhandled<IllegalArgumentException, ForAnnotation>(new IllegalArgumentException("Next can not be null!"));
+        }
+        return new Unhandled<IllegalArgumentException, ForAnnotation>(new ForAnnotation(true, null, null, null, null, null, iterable, variable, next));
     }
 
     pack(): RenderablePack {
@@ -69,95 +103,7 @@ export default class ForAnnotation extends Annotation {
         return this.incrementVariable;
     }
 
-    public static parse(expression: string, next: Renderable): Unhandled<TemplateParseException, ForAnnotation> {
-        if (Checker.checkNotNull(expression)) {
-            throw new IllegalArgumentException("Expression can not be null!");
-        }
-        if (Checker.checkNotNull(next)) {
-            throw new IllegalArgumentException("Next can not be null!");
-        }
 
-        let rest: string = null;
-        let indexOfSemicolon: number = expression.indexOf(';');
-        if (indexOfSemicolon === -1) {
-
-            let indexOfColon: number = expression.indexOf(':');
-            if (indexOfColon === -1) {
-                return new Unhandled<TemplateParseException, ForAnnotation>(new TemplateParseException("For pattern invalid!"));
-            }
-            let letiable: string = expression.substring(0, indexOfColon);
-            let iterable: string = expression.substring(indexOfColon + 1);
-
-            if (!letiable.match(/\s*[a-zA-Z_]+\w*\s*/)) {
-                return new Unhandled<TemplateParseException, ForAnnotation>(new TemplateParseException("For letiable-name invalid!"));
-            }
-
-            let letiableName: string = letiable.match(/[a-zA-Z_]+\w*/)[0];
-
-            let iterableAccessor: Unhandled<AccessorParseException, Accessor> = Accessor.parse(iterable);
-            if (iterableAccessor.isThrown()) {
-                return new Unhandled<TemplateParseException, ForAnnotation>(iterableAccessor.getException());
-            }
-
-            return new Unhandled<TemplateParseException, ForAnnotation>(new ForAnnotation(true, null, null, null, null, null, iterableAccessor.get(), letiableName, next));
-        }
-        let definition: string = expression.substring(0, indexOfSemicolon);
-        rest = expression.substring(indexOfSemicolon + 1);
-        indexOfSemicolon = rest.indexOf(';');
-        if (indexOfSemicolon === -1) {
-            return new Unhandled<TemplateParseException, ForAnnotation>(new TemplateParseException("For pattern missing condition!"));
-        }
-        let condition: string = rest.substring(0, indexOfSemicolon);
-        let increment: string = rest.substring(indexOfSemicolon + 1);
-
-        if (condition.length === 0) {
-            return new Unhandled<TemplateParseException, ForAnnotation>(new TemplateParseException("For condition can not be empty!"));
-        }
-        if (increment.length === 0) {
-            return new Unhandled<TemplateParseException, ForAnnotation>(new TemplateParseException("For increment can not be empty!"));
-        }
-        let definitionAccessor: Accessor = null;
-        let definitionVariable: string = null;
-        if (definition.length !== 0) {
-            let defintionEqualsIndex: number = definition.indexOf('=');
-            if (defintionEqualsIndex === -1) {
-                return new Unhandled<TemplateParseException, ForAnnotation>(new TemplateParseException("For defintion must contain an assignment!"));
-            }
-            let definitionParts: [string, string] = [definition.substring(0, defintionEqualsIndex), definition.substring(defintionEqualsIndex + 1)];
-            if (!definitionParts[0].match(/\s*int\s+[a-zA-Z_]+\w*\s*/)) {
-                return new Unhandled<TemplateParseException, ForAnnotation>(new TemplateParseException("For defintion must contain an int assignment!"));
-            }
-
-            let indexOfInt: number = definitionParts[0].indexOf('int');
-            definitionVariable = definitionParts[0].substring(indexOfInt + 3).match(/[a-zA-Z_]+\w*/)[0];
-
-            let definitionAccessorRes: Unhandled<AccessorParseException, Accessor> = Accessor.parse(definitionParts[1]);
-            if (definitionAccessorRes.isThrown()) {
-                return new Unhandled<TemplateParseException, ForAnnotation>(definitionAccessorRes.getException());
-            }
-            definitionAccessor = definitionAccessorRes.get();
-        }
-
-        let incrementEqualsIndex: number = increment.indexOf('=');
-        if (incrementEqualsIndex === -1) {
-            return new Unhandled<TemplateParseException, ForAnnotation>(new TemplateParseException("For increment must contain an assignment!"));
-        }
-        let incrementParts: [string, string] = [increment.substring(0, incrementEqualsIndex), increment.substring(incrementEqualsIndex + 1)];
-        if (!incrementParts[0].match(/\s*[a-zA-Z_]+\w*\s*/)) {
-            return new Unhandled<TemplateParseException, ForAnnotation>(new TemplateParseException("For increment assignment invalid!"));
-        }
-        let incrementVariable: string = incrementParts[0].match(/[a-zA-Z_]+\w*/)[0];
-        let incrementAccessor: Unhandled<AccessorParseException, Accessor> = Accessor.parse(incrementParts[1]);
-        if (incrementAccessor.isThrown()) {
-            return new Unhandled<TemplateParseException, ForAnnotation>(incrementAccessor.getException());
-        }
-
-        let conditionAccessor: Unhandled<AccessorParseException, Accessor> = Accessor.parse(condition);
-        if (conditionAccessor.isThrown()) {
-            return new Unhandled<TemplateParseException, ForAnnotation>(conditionAccessor.getException());
-        }
-        return new Unhandled<TemplateParseException, ForAnnotation>(new ForAnnotation(false, conditionAccessor.get(), definitionAccessor, incrementAccessor.get(), definitionVariable, incrementVariable, null, null, next));
-    }
 
     protected render0(scope: Scope, next: Renderable): Unhandled<TemplateRenderException, Node> {
         let element: Node = document.createElement("div");

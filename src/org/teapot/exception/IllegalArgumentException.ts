@@ -1,6 +1,5 @@
-export default class IllegalArgumentException extends Error {
+import Exception from './Exception';
 
-    public constructor(message: string) {
-        super(message);
-    }
+export default class IllegalArgumentException extends Exception {
+
 }

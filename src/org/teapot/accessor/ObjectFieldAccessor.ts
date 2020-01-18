@@ -1,4 +1,3 @@
-import AccessorParseException from '../exception/AccessorParseException';
 import FieldAccessor from './FieldAccessor';
 import Field from '../view/Field';
 import Scope from '../view/Scope';
@@ -15,10 +14,17 @@ export default class ObjectFieldAccessor implements FieldAccessor {
     private readonly accessor: string;
 
     private constructor(accessor: string) {
-        if (!Checker.checkNotNull(accessor)) {
-            throw new IllegalArgumentException("Accessor can not be null!");
-        }
         this.accessor = accessor;
+    }
+
+    public static from(accessor: string): Unhandled<IllegalArgumentException, ObjectFieldAccessor> {
+        if (!Checker.checkNotNull(accessor)) {
+            return new Unhandled<IllegalArgumentException, ObjectFieldAccessor>(new IllegalArgumentException("Accessor can not be null!"));
+        }
+        if (!ObjectFieldAccessor.checkFormat(accessor)) {
+            return new Unhandled<IllegalArgumentException, ObjectFieldAccessor>(new IllegalArgumentException("Accessor format invalid!"));
+        }
+        return new Unhandled<IllegalArgumentException, ObjectFieldAccessor>(new ObjectFieldAccessor(accessor));
     }
 
     pack(): FieldAccessorPack {
@@ -29,26 +35,16 @@ export default class ObjectFieldAccessor implements FieldAccessor {
         return this.accessor;
     }
 
-    public static checkFormat(accessor: string): boolean {
-        if (accessor.match("[a-zA-Z][a-zA-Z0-9_]*")) { return true; }
-        return false;
-    }
-
-    public static parse(accessor: string): Unhandled<AccessorParseException, ObjectFieldAccessor> {
-        if (!Checker.checkNotNull(accessor)) {
-            throw new IllegalArgumentException("Accessor can not be null!");
-        }
-        if (!ObjectFieldAccessor.checkFormat(accessor)) {
-            return new Unhandled<AccessorParseException, ObjectFieldAccessor>(new AccessorParseException("ObjectFieldAccessor accessor must be a valid variable name format!"));
-		}
-        return new Unhandled<AccessorParseException, ObjectFieldAccessor>(new ObjectFieldAccessor(accessor));
-    }
-
     get(scope: Scope, field: Field): Unhandled<InvalidViewAccessException, Field> {
         if (!ObjectFieldAccessor.checkObjectField(field)) {
 			return new Unhandled<InvalidViewAccessException, Field>(new InvalidViewAccessException("ObjectAccessor can only access objects!"));
 		}
 		return field.get(scope, new PrimitiveFieldAccessor(this.getAccessor()));
+    }
+
+    public static checkFormat(accessor: string): boolean {
+        if (accessor.match("[a-zA-Z][a-zA-Z0-9_]*")) { return true; }
+        return false;
     }
 
 	private static checkObjectField(field: Field): boolean {

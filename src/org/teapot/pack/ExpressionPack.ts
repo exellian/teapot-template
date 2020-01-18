@@ -3,7 +3,7 @@ import Pack from '../abstract/Pack';
 
 export default class ExpressionPack extends Pack {
 
-    //BRAKCETS
+    //BRACKETS
     public innerExpression: ExpressionPack;
 
     //OPERATOR
