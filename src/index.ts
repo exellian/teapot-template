@@ -2,6 +2,7 @@ import * as fs from "fs";
 import TemplateParseException from './org/teapot/exception/TemplateParseException';
 import TeapotTemplate from './org/teapot/template/TeapotTemplate';
 import Unhandled from './org/teapot/util/Unhandled';
+import TeapotParser from './org/teapot/parser/TeapotParser';
 
 class IO {
 
@@ -26,7 +27,7 @@ let files: string[] = IO.listFiles(__dirname);
 for (let key in files) {
     let file = files[key];
     if (file.endsWith(".html")) {
-        let t: Unhandled<TemplateParseException, TeapotTemplate> = TeapotTemplate.parse(fs.readFileSync(file).toString());
+        let t: Unhandled<TemplateParseException, TeapotTemplate> = new TeapotParser().parse(fs.readFileSync(file).toString());
 
         console.time('parse');
 
