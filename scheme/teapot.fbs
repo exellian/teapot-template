@@ -1,0 +1,91 @@
+namespace Teapot;
+
+struct Float {
+	value:float;
+}
+struct Int {
+	value:int;
+}
+struct Bool {
+	value:bool;
+}
+table String {
+	value:string;
+}
+
+union Any { Float, Int, Bool, String }
+
+table Accessor {
+	type:uint;
+	expression:Expression;
+}
+
+table TextPartition {
+	type:uint;
+    
+	valueAccessor:Accessor;
+    text:string;
+}
+
+table Attribute {
+	type:uint;
+	
+	name: string;
+    value:[TextPartition];
+}
+
+table Renderable {
+	type:uint;
+	
+	textPartitions:[TextPartition];
+
+    name:string;
+    children:[Renderable];
+    attributes:[Attribute];
+
+	next:Renderable;
+
+    condition:Accessor;
+    definition:Accessor;
+    increment:Accessor;
+    definitionVariable:string;
+    incrementVariable:string;
+    iterator:bool;
+    iterable:Accessor;
+    variable:string;
+
+    accessor:Accessor;
+
+}
+
+table FieldAccessor {
+	type:uint;
+	
+    innerExpression:Expression;
+
+    parameters:[Expression];
+	
+    accessor: string;
+}
+
+table Expression {
+	type:uint;
+	
+    innerExpression:Expression;
+
+    operator:string;
+	left:Expression;
+	right:Expression;
+
+    fields:[FieldAccessor];
+
+    value: Any;
+}
+
+table TeapotTemplate {
+	type:uint;
+	
+	root:Renderable;
+}
+
+root_type TeapotTemplate;
