@@ -5,9 +5,9 @@ import Parser from './Parser';
 import UnpackException from '../exception/UnpackException';
 import Unhandled from '../util/Unhandled';
 import TemplateParseException from '../exception/TemplateParseException';
-import FlatBufferParser from './FlatBufferParser';
+import FlatBufferUnpacker from './FlatBufferUnpacker';
 
-export class TemplateEngine<T extends Template<P>, P extends Pack, D extends Parser<T, P>, F extends Unpacker<T, P>, FP extends FlatBufferParser<P>> {
+export class TemplateEngine<T extends Template<P>, P extends Pack, D extends Parser<T, P>, F extends Unpacker<T, P>, FP extends FlatBufferUnpacker<P>> {
 
     private readonly unpacker: F;
     private readonly parser: D;
