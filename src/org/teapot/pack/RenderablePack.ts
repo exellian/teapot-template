@@ -1,11 +1,12 @@
 import AttributePack from './AttributePack';
 import AccessorPack from './AccessorPack';
 import Pack from '../abstract/Pack';
+import TextPartitionPack from './TextPartitionPack';
 
 export default class RenderablePack extends Pack {
 
     //TEXT
-    public text: string;
+    public textPartitions: TextPartitionPack[];
 
     //TAG
     public name: string;

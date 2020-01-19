@@ -4,18 +4,20 @@ import Unhandled from '../util/Unhandled';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import Checker from '../util/Checker';
 import TeapotPackType from '../pack/TeapotPackType';
+import TextPartition from './TextPartition';
+import TextPartitionPack from '../pack/TextPartitionPack';
 
 export default class Attribute implements Packable<AttributePack> {
 
     private readonly name: string;
-    private readonly value: string;
+    private readonly value: TextPartition[];
 
-    private constructor(name: string, value: string) {
+    private constructor(name: string, value: TextPartition[]) {
         this.name = name;
         this.value = value;
     }
 
-    public static from(name: string, value: string): Unhandled<IllegalArgumentException, Attribute> {
+    public static from(name: string, value: TextPartition[]): Unhandled<IllegalArgumentException, Attribute> {
         if (!Checker.checkNotNull(name)) {
             return new Unhandled<IllegalArgumentException, Attribute>(new IllegalArgumentException("Name can not be null!"));
         }
@@ -27,8 +29,12 @@ export default class Attribute implements Packable<AttributePack> {
 
     pack(): AttributePack {
         let pack: AttributePack = new AttributePack(TeapotPackType.ATTRIBUTE);
+        let packs: TextPartitionPack[] = [];
+        for (let v of this.getLinkValue()) {
+            packs.push(v.pack());
+        }
         pack.name = this.getName();
-        pack.value = this.getValue();
+        pack.value = packs;
         return pack;
     }
 
@@ -36,7 +42,7 @@ export default class Attribute implements Packable<AttributePack> {
         return this.name;
     }
 
-    public getValue(): string {
+    public getLinkValue(): TextPartition[] {
         return this.value;
     }
 }

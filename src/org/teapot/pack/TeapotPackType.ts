@@ -17,6 +17,8 @@ export default class TeapotPackType {
     public static readonly ARRAY_FIELD_ACCESSOR: number = 14;
     public static readonly FUNCTION_FIELD_ACCESSOR: number = 15;
     public static readonly OBJECT_FIELD_ACCESSOR: number = 16;
+    public static readonly RAW_TEXT: number = 17;
+    public static readonly VALUE_TEXT: number = 18;
 
     public static isAnnotation(type: number): boolean {
         return type >= 5 && type <= 9;

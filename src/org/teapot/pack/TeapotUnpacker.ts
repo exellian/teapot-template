@@ -27,6 +27,10 @@ import FunctionFieldAccessor from '../accessor/FunctionFieldAccessor';
 import ObjectFieldAccessor from '../accessor/ObjectFieldAccessor';
 import Unpacker from '../abstract/Unpacker';
 import UnpackException from '../exception/UnpackException';
+import TextPartitionPack from './TextPartitionPack';
+import TextPartition from '../template/TextPartition';
+import RawTextPartition from '../template/RawTextPartition';
+import ValueTextPartition from '../template/ValueTextPartition';
 
 
 export default class TeapotUnpacker implements Unpacker<TeapotTemplate, TeapotTemplatePack> {
@@ -52,7 +56,11 @@ export default class TeapotUnpacker implements Unpacker<TeapotTemplate, TeapotTe
         }
         let renderable: Renderable;
         if (pack.type === TeapotPackType.TEXT) {
-            let text: Unhandled<IllegalArgumentException, Text> = Text.from(pack.text);
+            let textPartitions: Unhandled<UnpackException, TextPartition[]> = TeapotUnpacker.fromTextPartitionPackArray(pack.textPartitions);
+            if (textPartitions.isThrown()) {
+                return new Unhandled<UnpackException, Renderable>(textPartitions.getException());
+            }
+            let text: Unhandled<IllegalArgumentException, Text> = Text.from(textPartitions.get());
             if (text.isThrown()) {
                 return new Unhandled<UnpackException, Renderable>(new UnpackException(text.getException()));
             }
@@ -72,6 +80,7 @@ export default class TeapotUnpacker implements Unpacker<TeapotTemplate, TeapotTe
             }
             renderable = tag.get();
         } else if (TeapotPackType.isAnnotation(pack.type)) {
+
             let next: Unhandled<UnpackException, Renderable> = TeapotUnpacker.fromRenderablePack(pack.next);
             if (next.isThrown()) {
                 next.reset();
@@ -145,6 +154,49 @@ export default class TeapotUnpacker implements Unpacker<TeapotTemplate, TeapotTe
         return new Unhandled<UnpackException, Renderable[]>(renderables);
     }
 
+    private static fromTextPartitionPack(pack: TextPartitionPack): Unhandled<UnpackException, TextPartition> {
+        if (!Checker.checkNotNull(pack)) {
+            return new Unhandled<UnpackException, TextPartition>(new UnpackException(new IllegalArgumentException("Pack can not be null!")));
+        }
+        let textPartition: TextPartition = null;
+        if (pack.type === TeapotPackType.RAW_TEXT) {
+            let rawTextPartition: Unhandled<IllegalArgumentException, RawTextPartition> = RawTextPartition.from(pack.text);
+            if (rawTextPartition.isThrown()) {
+                return new Unhandled<UnpackException, TextPartition>(new UnpackException(rawTextPartition.getException()));
+            }
+            textPartition = rawTextPartition.get();
+        } else if (pack.type === TeapotPackType.VALUE_TEXT) {
+            let valueAccessor: Unhandled<UnpackException, Accessor> = TeapotUnpacker.fromAccessorPack(pack.valueAccessor);
+            if (valueAccessor.isThrown()) {
+                return new Unhandled<UnpackException, TextPartition>(valueAccessor.getException());
+            }
+            let valueTextPartition: Unhandled<IllegalArgumentException, ValueTextPartition> = ValueTextPartition.from(valueAccessor.get());
+            if (valueTextPartition.isThrown()) {
+                return new Unhandled<UnpackException, TextPartition>(new UnpackException(valueTextPartition.getException()));
+            }
+            textPartition = valueTextPartition.get();
+        } else {
+            return new Unhandled<UnpackException, TextPartition>(new UnpackException("TextPartition pack type invalid!"));
+        }
+        return new Unhandled<UnpackException, TextPartition>(textPartition);
+    }
+
+    private static fromTextPartitionPackArray(packs: TextPartitionPack[]): Unhandled<UnpackException, TextPartition[]> {
+        if (!Checker.checkNotNull(packs)) {
+            return new Unhandled<UnpackException, TextPartition[]>(new UnpackException(new IllegalArgumentException("Packs can not be null!")));
+        }
+        let textPartitions: TextPartition[] = [];
+        for (let pack of packs) {
+            let textPartition: Unhandled<UnpackException, TextPartition> = TeapotUnpacker.fromTextPartitionPack(pack);
+            if (textPartition.isThrown()) {
+                return new Unhandled<UnpackException, TextPartition[]>(textPartition.getException());
+            }
+            textPartitions.push(textPartition.get());
+        }
+        return new Unhandled<UnpackException, TextPartition[]>(textPartitions);
+    }
+
+
     private static fromAttributePack(pack: AttributePack): Unhandled<UnpackException, Attribute> {
         if (!Checker.checkNotNull(pack)) {
             return new Unhandled<UnpackException, Attribute>(new UnpackException(new IllegalArgumentException("Pack can not be null!")));
@@ -152,7 +204,11 @@ export default class TeapotUnpacker implements Unpacker<TeapotTemplate, TeapotTe
         if (pack.type !== TeapotPackType.ATTRIBUTE) {
             return new Unhandled<UnpackException, Attribute>(new UnpackException(new IllegalArgumentException("Attribute pack type invalid!")));
         }
-        let attribute: Unhandled<IllegalArgumentException, Attribute> = Attribute.from(pack.name, pack.value);
+        let textPartitions: Unhandled<UnpackException, TextPartition[]> = TeapotUnpacker.fromTextPartitionPackArray(pack.value);
+        if (textPartitions.isThrown()) {
+            return new Unhandled<UnpackException, Attribute>(textPartitions.getException());
+        }
+        let attribute: Unhandled<IllegalArgumentException, Attribute> = Attribute.from(pack.name, textPartitions.get());
         if (attribute.isThrown()) {
             return new Unhandled<UnpackException, Attribute>(new UnpackException(attribute.getException()));
         }

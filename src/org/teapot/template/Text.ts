@@ -6,34 +6,44 @@ import RenderablePack from '../pack/RenderablePack';
 import Checker from '../util/Checker';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import TeapotPackType from '../pack/TeapotPackType';
+import TextPartition from './TextPartition';
+import TextPartitionPack from '../pack/TextPartitionPack';
 
 export default class Text implements Renderable {
 
-    private readonly text: string;
+    private readonly textPartitions: TextPartition[];
 
-    private constructor(text: string) {
-        this.text = text;
+    private constructor(textPartitions: TextPartition[]) {
+        this.textPartitions = textPartitions;
     }
 
-    public static from(text: string): Unhandled<IllegalArgumentException, Text> {
-        if (!Checker.checkNotNull(text)) {
-            return new Unhandled<IllegalArgumentException, Text>(new IllegalArgumentException("Text can not be null!"));
+    public static from(textPartitions: TextPartition[]): Unhandled<IllegalArgumentException, Text> {
+        if (!Checker.checkNotNull(textPartitions)) {
+            return new Unhandled<IllegalArgumentException, Text>(new IllegalArgumentException("Text partitions can not be null!"));
         }
-        return new Unhandled<IllegalArgumentException, Text>(new Text(text));
+        return new Unhandled<IllegalArgumentException, Text>(new Text(textPartitions));
     }
 
-    pack(): RenderablePack {
+    public pack(): RenderablePack {
         let pack: RenderablePack = new RenderablePack(TeapotPackType.TEXT);
-        pack.text = this.getText();
+        let packs: TextPartitionPack[] = [];
+        for (let textPartition of this.getLinkTextPartitions()) {
+            packs.push(textPartition.pack());
+        }
+        pack.textPartitions = packs;
         return pack;
     }
 
-    render(_scope: Scope): Unhandled<RenderException, Node> {
-        return new Unhandled<RenderException, Node>(document.createTextNode(this.getText()));
+    public render(scope: Scope): Unhandled<RenderException, Node> {
+        let text: string = "";
+        for (let textPartition of this.getLinkTextPartitions()) {
+            text += textPartition.render(scope);
+        }
+        return new Unhandled<RenderException, Node>(document.createTextNode(text));
     }
 
-    public getText(): string {
-        return this.text;
+    private getLinkTextPartitions(): TextPartition[] {
+        return this.textPartitions;
     }
 
 }
