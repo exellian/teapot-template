@@ -7,7 +7,7 @@
  
 ```typescript
 
-    let html = "<div>" +
+    let html = "<div class='class_@(test)'>" +
                     "@for(int i = 0;i < 10;i++)" +
                     "<div>@(test) @(i)</div>" +
                "</div>";
