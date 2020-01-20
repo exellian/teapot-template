@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/exellian/teapot-template.svg?branch=master)](https://travis-ci.com/exellian/teapot-template) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/aaa8b233d1c045d2baf7c346aff4bbc8)](https://www.codacy.com/manual/exellian/teapot-template?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=exellian/teapot-template&amp;utm_campaign=Badge_Grade) [![codecov](https://codecov.io/gh/exellian/teapot-template/branch/master/graph/badge.svg)](https://codecov.io/gh/exellian/teapot-template)
+[![Build Status](https://travis-ci.com/exellian/teapot-template.svg?branch=master)](https://travis-ci.com/exellian/teapot-template) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/aaa8b233d1c045d2baf7c346aff4bbc8)](https://www.codacy.com/manual/exellian/teapot-template?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=exellian/teapot-template&amp;utm_campaign=Badge_Grade)
 
 # teapot-template
  A template engine with annotation syntax
