@@ -27,12 +27,6 @@ let main = function() {
 
     let template: TeapotTemplate = templateParseResult.get();
 
-    let viewObject: ObjectField = new ObjectField();
-
-    viewObject.setLinkField("test", new PrimitiveField("Hallo Welt!"));
-
-    let view: View = new View(viewObject);
-
     let pack: TeapotTemplatePack = template.pack();
 
     console.log(JSON.stringify(pack));
