@@ -10,7 +10,7 @@ import UnpackException from './org/teapot/exception/UnpackException';
 
 
 
-var main = function() {
+let main = function() {
 
     let html = "<div class='lel'>" +
                     "@for(int i = 0;i < 10;i++)" +
