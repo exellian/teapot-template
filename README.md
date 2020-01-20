@@ -1,5 +1,4 @@
-[![Build Status](https://travis-ci.com/exellian/teapot-template.svg?branch=master)](https://travis-ci.com/exellian/teapot-template) [![![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/exellian/teapot-template.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/exellian/teapot-template/context:javascript)
-[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/exellian/teapot-template.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/exellian/teapot-template/context:javascript)
+[![Build Status](https://travis-ci.com/exellian/teapot-template.svg?branch=master)](https://travis-ci.com/exellian/teapot-template) [![![![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/exellian/teapot-template.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/exellian/teapot-template/context:javascript)
 
 # teapot-template
  A template engine with annotation syntax
