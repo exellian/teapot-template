@@ -9,8 +9,10 @@ before_script:
 
 script:
   - npm run test
+  
 after_success:
   - codecov
+  
 deploy:
   provider: releases
   file_glob: true
