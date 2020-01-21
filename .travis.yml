@@ -13,11 +13,3 @@ script:
   
 after_success:
   - codecov
-  
-deploy:
-  provider: releases
-  file_glob: true
-  file: dist/out-tsc/*
-  skip_cleanup: true
-  on:
-    tags: false
