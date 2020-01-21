@@ -8,6 +8,8 @@ before_script:
   - npm run build
 
 script:
+  - cd dist
+  - cd out-tsc
   - ls
 after_success:
   - codecov
