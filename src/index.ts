@@ -2,23 +2,14 @@ import TeapotTemplateEngine from "./org/teapot/TeapotTemplateEngine";
 import Unhandled from './org/teapot/util/Unhandled';
 import TemplateParseException from './org/teapot/exception/TemplateParseException';
 import TeapotTemplate from './org/teapot/template/TeapotTemplate';
-import ObjectField from './org/teapot/view/ObjectField';
-import PrimitiveField from './org/teapot/view/PrimitiveField';
-import View from './org/teapot/view/View';
 import TeapotTemplatePack from './org/teapot/pack/TeapotTemplatePack';
-import UnpackException from './org/teapot/exception/UnpackException';
 import TeapotFlatBufferPacker from './org/teapot/flatbuffer/TeapotFlatBufferPacker';
-import { flatbuffers } from 'flatbuffers';
-import { Teapot } from '../scheme/teapot_generated';
 import TeapotFlatBufferUnpacker from './org/teapot/flatbuffer/TeapotFlatBufferUnpacker';
-import { load } from "protobufjs";
-
-
+import { TeapotTemplateMessage, ITeapotTemplateMessage } from '../proto/teapot';
 let main = function() {
 
-    let html = "<div class='lel'>" +
-                    "@for(int i = 0;i < 10;i++)" +
-                    "<div>@(test) @(i)</div>" +
+    let html = "<div>" +
+                    "@for(int i = 0;i < 10;i++) <div>@(test)</div>" +
                "</div>";
 
     let engine: TeapotTemplateEngine = new TeapotTemplateEngine;
@@ -33,41 +24,48 @@ let main = function() {
     let pack: TeapotTemplatePack = template.pack();
     let raw = TeapotFlatBufferPacker.pack(pack);
     let json = JSON.stringify(pack);
-    console.time("serialization FlatBuffer");
+    console.time("deserialization FlatBuffer");
 
-    for (let i = 0;i < 10000;i++) {
+    for (let i = 0;i < 1;i++) {
         TeapotFlatBufferUnpacker.parse(raw);
     }
 
-    console.timeEnd("serialization FlatBuffer");
+    console.timeEnd("deserialization FlatBuffer");
 
-    console.time("serialization JSON");
+    console.time("deserialization JSON");
 
-    for (let i = 0;i < 10000;i++) {
+    for (let i = 0;i < 1;i++) {
         JSON.parse(json);
     }
 
-    console.timeEnd("serialization JSON");
+    console.timeEnd("deserialization JSON");
 
-    load("proto/teapot.proto", function(err, root) {
-      if (err)
-        throw err;
-      const TeapotTemplate = root.lookupType("TeapotTemplate");
+    let message = TeapotTemplateMessage.create(<ITeapotTemplateMessage>pack);
+    let buffer = TeapotTemplateMessage.encode(message).finish();
 
-      let message = TeapotTemplate.create(pack);
-      let buffer = TeapotTemplate.encode(message).finish();
+    console.time("deserialization Protobuf");
 
-      console.time("serialization Protobuf");
+    for (let i = 0;i < 1;i++) {
+        let obj = TeapotTemplateMessage.decode(buffer);
+    }
 
-      for (let i = 0;i < 10000;i++) {
-          TeapotTemplate.decode(buffer);
-      }
+    console.timeEnd("deserialization Protobuf");
+      //console.log(JSON.stringify(obj));
 
-      console.timeEnd("serialization Protobuf");
+      console.log(Uint8ToString(buffer));
 
-    });
 
 }
-
+function Uint8ToString(u8a){
+  var CHUNK_SZ = 0x8000;
+  var c = [];
+  for (var i=0; i < u8a.length; i+=CHUNK_SZ) {
+    c.push(String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ)));
+  }
+  return c.join("");
+}
+// Usage
+var u8 = new Uint8Array([65, 66, 67, 68]);
+var b64encoded = btoa(Uint8ToString(u8));
 
 main();

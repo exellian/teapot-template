@@ -6,27 +6,27 @@ import TextPartitionPack from './TextPartitionPack';
 export default class RenderablePack extends Pack {
 
     //TEXT
-    public textPartitions: TextPartitionPack[];
+    public textPartitions: TextPartitionPack[] = null;
 
     //TAG
-    public name: string;
-    public children: RenderablePack[];
-    public attributes: AttributePack[];
+    public name: string = null;
+    public children: RenderablePack[] = null;
+    public attributes: AttributePack[] = null;
 
     //ANNOTATION
-    public next: RenderablePack;
+    public next: RenderablePack = null;
 
     //FOR ANNOTATION
-    public condition: AccessorPack;
-    public definition: AccessorPack;
-    public increment: AccessorPack;
-    public definitionVariable: string;
-    public incrementVariable: string;
-    public iterator: boolean;
-    public iterable: AccessorPack;
-    public variable: string;
+    public condition: AccessorPack = null;
+    public definition: AccessorPack = null;
+    public increment: AccessorPack = null;
+    public definitionVariable: string = null;
+    public incrementVariable: string = null;
+    public iterator: boolean = null;
+    public iterable: AccessorPack = null;
+    public variable: string = null;
 
     //IF ANNOTATION
-    public accessor: AccessorPack;
+    public accessor: AccessorPack = null;
 
 }

@@ -4,9 +4,9 @@ import AccessorPack from './AccessorPack';
 export default class TextPartitionPack extends Pack {
 
     //ValueTextPartition
-    public valueAccessor: AccessorPack;
+    public valueAccessor: AccessorPack = null;
 
     //RawTextPartition
-    public text: string;
+    public text: string = null;
 
 }

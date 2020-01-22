@@ -58,7 +58,7 @@ message Expression {
 	}
 }
 
-message TeapotTemplate {
+message TeapotTemplateMessage {
 	uint32 type = 1;
 	Renderable root = 2;
 }

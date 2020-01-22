@@ -201,7 +201,7 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
     }
 
     private static parseHtmlBrowser(html: string): ChildNode {
-        var docNode = null;
+        let docNode = null;
         //@ts-ignore
         if (window.DOMParser) {
             let parser: DOMParser = new DOMParser();
@@ -216,10 +216,12 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
     }
 
     private static parseHtmlNodeJS(html: string): ChildNode {
-        const jsdom = require("jsdom");
+        //@ts-ignore
+        /*const jsdom = require("jsdom");
         const { JSDOM } = jsdom;
         let dom = new JSDOM(html);
-        return dom.window.document.body.children[0];
+        return dom.window.document.body.children[0];*/
+        return null;
     }
 
 }

@@ -4,12 +4,12 @@ import Pack from '../abstract/Pack';
 export default class FieldAccessorPack extends Pack {
 
     //ARRAYFIELDACCESSOR
-    public innerExpression: ExpressionPack;
+    public innerExpression: ExpressionPack = null;
 
     //FUNCTIONFIELDACCESSOR
-    public parameters: ExpressionPack[];
+    public parameters: ExpressionPack[] = null;
 
     //OBJECTFIELDACCESSOR
-    public accessor: string;
+    public accessor: string = null;
 
 }
