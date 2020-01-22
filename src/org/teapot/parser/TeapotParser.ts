@@ -24,6 +24,7 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
         if (!Checker.checkNotNull(html)) {
             return new Unhandled<TemplateParseException, TeapotTemplate>(new TemplateParseException(new IllegalArgumentException("Html can not be null!")));
         }
+        html = TeapotParser.replaceAnnotationCharacters(html);
         let element: ChildNode = TeapotParser.parseHtml(html);
 
         let renderable: Unhandled<TemplateParseException, Renderable> = TeapotParser.parseNode(element);
@@ -35,6 +36,22 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
             return new Unhandled<TemplateParseException, TeapotTemplate>(new TemplateParseException(teapotTemplate.getException()));
         }
         return new Unhandled<TemplateParseException, TeapotTemplate>(teapotTemplate.get());
+    }
+
+    public static replaceAnnotationCharacters(html: string): string {
+        let match: RegExpExecArray;
+        let annotationPattern: RegExp = /@\s*[A-Za-z]*\s*\([^@.]+\)/;
+
+        let final: string = "";
+        while (match = annotationPattern.exec(html)) {
+            final += html.substring(0, match.index);
+            let annotation: string = match[0];
+            annotation = annotation.split('<').join("%0");
+            final += annotation;
+            html = html.substring(match.index + annotation.length);
+        }
+        final += html;
+        return final;
     }
 
     private static parseNode(element: ChildNode): Unhandled<TemplateParseException, Renderable> {
@@ -138,6 +155,7 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
         let annotationPattern: RegExp = /@\s*[A-Za-z]*\s*\([^@.]+\)/g;
         while (match = annotationPattern.exec(block)) {
             let annotation: string = match[0];
+            annotation = annotation.split('%0').join('<');
             let indexOfFirstBracket: number = annotation.indexOf('(');
             let name: string = annotation.substring(1, indexOfFirstBracket).match(/[A-Za-z]*/)[0];
             let expression: string = annotation.substring(indexOfFirstBracket + 1, annotation.lastIndexOf(')'));
@@ -170,6 +188,7 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
                 partitions.push(rp.get());
             }
             let annotation: string = match[0];
+            annotation = annotation.split('%0').join('<');
             let indexOfFirstBracket: number = annotation.indexOf('(');
             let expression: string = annotation.substring(indexOfFirstBracket + 1, annotation.lastIndexOf(')'));
             let accessor: Unhandled<TemplateParseException, Accessor> = AccessorParser.parse(expression);

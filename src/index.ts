@@ -6,11 +6,14 @@ import TeapotTemplatePack from './org/teapot/pack/TeapotTemplatePack';
 import TeapotFlatBufferPacker from './org/teapot/flatbuffer/TeapotFlatBufferPacker';
 import TeapotFlatBufferUnpacker from './org/teapot/flatbuffer/TeapotFlatBufferUnpacker';
 import { TeapotTemplateMessage, ITeapotTemplateMessage } from '../proto/teapot';
+import TeapotParser from './org/teapot/parser/TeapotParser';
 let main = function() {
 
     let html = "<div>" +
                     "@for(int i = 0;i < 10;i++) <div>@(test)</div>" +
                "</div>";
+
+    console.log(TeapotParser.replaceAnnotationCharacters(html));
 
     let engine: TeapotTemplateEngine = new TeapotTemplateEngine;
 
