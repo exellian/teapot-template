@@ -38,7 +38,7 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
         return new Unhandled<TemplateParseException, TeapotTemplate>(teapotTemplate.get());
     }
 
-    public static replaceAnnotationCharacters(html: string): string {
+    private static replaceAnnotationCharacters(html: string): string {
         let match: RegExpExecArray;
         let annotationPattern: RegExp = /@\s*[A-Za-z]*\s*\([^@.]+\)/;
 

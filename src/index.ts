@@ -7,13 +7,14 @@ import TeapotFlatBufferPacker from './org/teapot/flatbuffer/TeapotFlatBufferPack
 import TeapotFlatBufferUnpacker from './org/teapot/flatbuffer/TeapotFlatBufferUnpacker';
 import { TeapotTemplateMessage, ITeapotTemplateMessage } from '../proto/teapot';
 import TeapotParser from './org/teapot/parser/TeapotParser';
+import ObjectField from './org/teapot/view/ObjectField';
+import PrimitiveField from './org/teapot/view/PrimitiveField';
+import View from './org/teapot/view/View';
 let main = function() {
 
     let html = "<div>" +
                     "@for(int i = 0;i < 10;i++) <div>@(test)</div>" +
                "</div>";
-
-    console.log(TeapotParser.replaceAnnotationCharacters(html));
 
     let engine: TeapotTemplateEngine = new TeapotTemplateEngine;
 
@@ -49,14 +50,26 @@ let main = function() {
     console.time("deserialization Protobuf");
 
     for (let i = 0;i < 1;i++) {
-        let obj = TeapotTemplateMessage.decode(buffer);
+        TeapotTemplateMessage.decode(buffer);
     }
 
     console.timeEnd("deserialization Protobuf");
       //console.log(JSON.stringify(obj));
 
-      console.log(Uint8ToString(buffer));
+    console.log(Uint8ToString(buffer));
 
+
+    let field: ObjectField = new ObjectField();
+
+    field.setLinkField("test", new PrimitiveField("Hallo World!"))
+
+    let view = new View(field);
+
+    let element = template.render(view);
+    if (element.isThrown()) {
+        throw element.getException();
+    }
+    document.body.appendChild(element.get());
 
 }
 function Uint8ToString(u8a){

@@ -167,10 +167,12 @@ export default class ForAnnotation extends Annotation {
         let newScope: Scope = scope.newScope(object);
 
         while (true) {
-            let condition: Unhandled<InvalidViewAccessException, PrimitiveField> = this.getLinkCondition().get(newScope);
+            let condition: Unhandled<InvalidViewAccessException, PrimitiveField> = <Unhandled<InvalidViewAccessException, PrimitiveField>>this.getLinkCondition().getField(newScope);
+
             if (condition.isThrown()) {
                 return new Unhandled<TemplateRenderException, Node>(new TemplateParseException(condition.getException()));
             }
+            console.log(condition.get());
             if (!condition.get().isBoolean()) {
                 return new Unhandled<TemplateRenderException, Node>(new TemplateRenderException("For condition value must be of type boolean!"));
             }
