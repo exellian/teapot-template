@@ -31,7 +31,7 @@ table Attribute {
 	type:uint;
 	
 	name: string;
-    value:[TextPartition];
+    value:[TextPartition] = 0;
 }
 
 table Renderable {

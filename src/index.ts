@@ -1,4 +1,4 @@
-import { TeapotTemplateEngine } from "./org/teapot/TeapotTemplateEngine";
+import TeapotTemplateEngine from "./org/teapot/TeapotTemplateEngine";
 import Unhandled from './org/teapot/util/Unhandled';
 import TemplateParseException from './org/teapot/exception/TemplateParseException';
 import TeapotTemplate from './org/teapot/template/TeapotTemplate';
@@ -7,7 +7,10 @@ import PrimitiveField from './org/teapot/view/PrimitiveField';
 import View from './org/teapot/view/View';
 import TeapotTemplatePack from './org/teapot/pack/TeapotTemplatePack';
 import UnpackException from './org/teapot/exception/UnpackException';
-
+import TeapotFlatBufferPacker from './org/teapot/flatbuffer/TeapotFlatBufferPacker';
+import { flatbuffers } from 'flatbuffers';
+import { Teapot } from '../scheme/teapot_generated';
+import TeapotFlatBufferUnpacker from './org/teapot/flatbuffer/TeapotFlatBufferUnpacker';
 
 
 let main = function() {
@@ -26,22 +29,26 @@ let main = function() {
     }
 
     let template: TeapotTemplate = templateParseResult.get();
-
     let pack: TeapotTemplatePack = template.pack();
+    let raw = TeapotFlatBufferPacker.pack(pack);
+    let json = JSON.stringify(pack);
+    console.time("serialization0");
 
-    console.log(JSON.stringify(pack));
-
-    let unpackedTemplate: Unhandled<UnpackException, TeapotTemplate> = engine.fromPack(pack);
-
-    if (unpackedTemplate.isThrown()) {
-        throw unpackedTemplate.getException();
+    for (let i = 0;i < 100;i++) {
+        TeapotFlatBufferUnpacker.parse(raw);
     }
 
-    let pack1: TeapotTemplatePack = unpackedTemplate.get().pack();
+    console.timeEnd("serialization0");
 
-    console.log("");
+    console.time("serialization");
 
-    console.log(JSON.stringify(pack1));
+    for (let i = 0;i < 100;i++) {
+        JSON.parse(json);
+    }
+
+    console.timeEnd("serialization");
+
 }
+
 
 main();

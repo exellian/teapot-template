@@ -8,11 +8,10 @@ import AccessorPack from '../pack/AccessorPack';
 import AttributePack from '../pack/AttributePack';
 import FieldAccessorPack from '../pack/FieldAccessorPack';
 import Checker from '../util/Checker';
-import FlatBufferUnpacker from '../abstract/FlatBufferUnpacker';
 
-export default class TeapotFlatBufferUnpacker implements FlatBufferUnpacker<TeapotTemplatePack> {
+export default class TeapotFlatBufferUnpacker {
 
-    public parse(data: Uint8Array): TeapotTemplatePack {
+    public static parse(data: Uint8Array): TeapotTemplatePack {
         let buffer: flatbuffers.ByteBuffer = new flatbuffers.ByteBuffer(data);
         let template: Teapot.TeapotTemplate = Teapot.TeapotTemplate.getRootAsTeapotTemplate(buffer);
         return TeapotFlatBufferUnpacker.fromTeapotTemplate(template);
@@ -37,7 +36,8 @@ export default class TeapotFlatBufferUnpacker implements FlatBufferUnpacker<Teap
         return pack;
     }
 
-    private static fromTextPartitionArray(length: number, get: (index: number) => Teapot.TextPartition): TextPartitionPack[] {
+    private static fromTextPartitionArray(length: number, get: (index: number) => Teapot.TextPartition, binder: any): TextPartitionPack[] {
+        get = get.bind(binder);
         let packs: TextPartitionPack[] = [];
         for (let i = 0;i < length;i++) {
             packs.push(TeapotFlatBufferUnpacker.fromTextPartition(get(i)));
@@ -60,10 +60,10 @@ export default class TeapotFlatBufferUnpacker implements FlatBufferUnpacker<Teap
         }
         let pack: RenderablePack = new RenderablePack(buf.type());
 
-        pack.textPartitions = TeapotFlatBufferUnpacker.fromTextPartitionArray(buf.textPartitionsLength(), buf.textPartitions);
+        pack.textPartitions = TeapotFlatBufferUnpacker.fromTextPartitionArray(buf.textPartitionsLength(), buf.textPartitions, buf);
         pack.name = buf.name();
-        pack.children = TeapotFlatBufferUnpacker.fromRenderableArray(buf.childrenLength(), buf.children);
-        pack.attributes = TeapotFlatBufferUnpacker.fromAttributeArray(buf.attributesLength(), buf.attributes);
+        pack.children = TeapotFlatBufferUnpacker.fromRenderableArray(buf.childrenLength(), buf.children, buf);
+        pack.attributes = TeapotFlatBufferUnpacker.fromAttributeArray(buf.attributesLength(), buf.attributes, buf);
         pack.next = TeapotFlatBufferUnpacker.fromRenderable(buf.next());
         pack.condition = TeapotFlatBufferUnpacker.fromAccessor(buf.condition());
         pack.definition = TeapotFlatBufferUnpacker.fromAccessor(buf.definition());
@@ -78,7 +78,8 @@ export default class TeapotFlatBufferUnpacker implements FlatBufferUnpacker<Teap
         return pack;
     }
 
-    private static fromRenderableArray(length: number, get: (index: number) => Teapot.Renderable): RenderablePack[] {
+    private static fromRenderableArray(length: number, get: (index: number) => Teapot.Renderable, binder: any): RenderablePack[] {
+        get = get.bind(binder);
         let packs: RenderablePack[] = [];
         for (let i = 0;i < length;i++) {
             packs.push(TeapotFlatBufferUnpacker.fromRenderable(get(i)));
@@ -96,7 +97,7 @@ export default class TeapotFlatBufferUnpacker implements FlatBufferUnpacker<Teap
         pack.operator = buf.operator();
     	pack.left = TeapotFlatBufferUnpacker.fromExpression(buf.left());
     	pack.right = TeapotFlatBufferUnpacker.fromExpression(buf.right());
-        pack.fields = TeapotFlatBufferUnpacker.fromFieldAccessorArray(buf.fieldsLength(), buf.fields);
+        pack.fields = TeapotFlatBufferUnpacker.fromFieldAccessorArray(buf.fieldsLength(), buf.fields, buf);
 
         if (buf.valueType() === Teapot.Any.NONE) {
             pack.value = null;
@@ -113,7 +114,8 @@ export default class TeapotFlatBufferUnpacker implements FlatBufferUnpacker<Teap
         return pack;
     }
 
-    private static fromExpressionArray(length: number, get: (index: number) => Teapot.Expression): ExpressionPack[] {
+    private static fromExpressionArray(length: number, get: (index: number) => Teapot.Expression, binder: any): ExpressionPack[] {
+        get = get.bind(binder);
         let packs: ExpressionPack[] = [];
         for (let i = 0;i < length;i++) {
             packs.push(TeapotFlatBufferUnpacker.fromExpression(get(i)));
@@ -127,11 +129,12 @@ export default class TeapotFlatBufferUnpacker implements FlatBufferUnpacker<Teap
         }
         let pack: AttributePack = new AttributePack(buf.type());
         pack.name = buf.name();
-        pack.value = TeapotFlatBufferUnpacker.fromTextPartitionArray(buf.valueLength(), buf.value);
+        pack.value = TeapotFlatBufferUnpacker.fromTextPartitionArray(buf.valueLength(), buf.value, buf);
         return pack;
     }
 
-    private static fromAttributeArray(length: number, get: (index: number) => Teapot.Attribute): AttributePack[] {
+    private static fromAttributeArray(length: number, get: (index: number) => Teapot.Attribute, binder: any): AttributePack[] {
+        get = get.bind(binder);
         let packs: AttributePack[] = [];
         for (let i = 0;i < length;i++) {
             packs.push(TeapotFlatBufferUnpacker.fromAttribute(get(i)));
@@ -146,13 +149,14 @@ export default class TeapotFlatBufferUnpacker implements FlatBufferUnpacker<Teap
         let pack: FieldAccessorPack = new FieldAccessorPack(buf.type());
 
         pack. innerExpression = TeapotFlatBufferUnpacker.fromExpression(buf.innerExpression());
-        pack. parameters = TeapotFlatBufferUnpacker.fromExpressionArray(buf.parametersLength(), buf.parameters);
+        pack. parameters = TeapotFlatBufferUnpacker.fromExpressionArray(buf.parametersLength(), buf.parameters, buf);
         pack. accessor = buf.accessor();
 
         return pack;
     }
 
-    private static fromFieldAccessorArray(length: number, get: (index: number) => Teapot.FieldAccessor): FieldAccessorPack[] {
+    private static fromFieldAccessorArray(length: number, get: (index: number) => Teapot.FieldAccessor, binder: any): FieldAccessorPack[] {
+        get = get.bind(binder);
         let packs: FieldAccessorPack[] = [];
         for (let i = 0;i < length;i++) {
             packs.push(TeapotFlatBufferUnpacker.fromFieldAccessor(get(i)));
