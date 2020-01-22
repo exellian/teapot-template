@@ -11,6 +11,7 @@ import TeapotFlatBufferPacker from './org/teapot/flatbuffer/TeapotFlatBufferPack
 import { flatbuffers } from 'flatbuffers';
 import { Teapot } from '../scheme/teapot_generated';
 import TeapotFlatBufferUnpacker from './org/teapot/flatbuffer/TeapotFlatBufferUnpacker';
+import { load } from "protobufjs";
 
 
 let main = function() {
@@ -32,21 +33,39 @@ let main = function() {
     let pack: TeapotTemplatePack = template.pack();
     let raw = TeapotFlatBufferPacker.pack(pack);
     let json = JSON.stringify(pack);
-    console.time("serialization0");
+    console.time("serialization FlatBuffer");
 
-    for (let i = 0;i < 100;i++) {
+    for (let i = 0;i < 10000;i++) {
         TeapotFlatBufferUnpacker.parse(raw);
     }
 
-    console.timeEnd("serialization0");
+    console.timeEnd("serialization FlatBuffer");
 
-    console.time("serialization");
+    console.time("serialization JSON");
 
-    for (let i = 0;i < 100;i++) {
+    for (let i = 0;i < 10000;i++) {
         JSON.parse(json);
     }
 
-    console.timeEnd("serialization");
+    console.timeEnd("serialization JSON");
+
+    load("proto/teapot.proto", function(err, root) {
+      if (err)
+        throw err;
+      const TeapotTemplate = root.lookupType("TeapotTemplate");
+
+      let message = TeapotTemplate.create(pack);
+      let buffer = TeapotTemplate.encode(message).finish();
+
+      console.time("serialization Protobuf");
+
+      for (let i = 0;i < 10000;i++) {
+          TeapotTemplate.decode(buffer);
+      }
+
+      console.timeEnd("serialization Protobuf");
+
+    });
 
 }
 

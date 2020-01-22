@@ -21,6 +21,7 @@
     "@types/jsdom": "^12.2.4",
     "flatbuffers": "^1.11.0",
     "jsdom": "^15.2.1",
+    "protobufjs": "^6.8.8",
     "tslib": "^1.10.0",
     "typescript": "^3.7.4"
   },

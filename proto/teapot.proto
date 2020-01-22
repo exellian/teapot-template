@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+message Accessor {
+	uint32 type = 1;
+	Expression expression = 2;
+}
+
+message TextPartition {
+	uint32 type = 1;
+	Accessor valueAccessor = 2;
+    string text = 3;
+}
+
+message Attribute {
+	uint32 type = 1;
+	string name = 2;
+    repeated TextPartition value = 3;
+}
+
+message Renderable {
+	uint32 type = 1;
+	repeated TextPartition textPartitions = 2;
+    string name = 3;
+    repeated Renderable children = 4;
+    repeated Attribute attributes = 5;
+	Renderable next = 6;
+    Accessor condition = 7;
+    Accessor definition = 8;
+    Accessor increment = 9;
+    string definitionVariable = 10;
+    string incrementVariable = 11;
+    bool iterator = 12;
+    Accessor iterable = 13;
+    string variable = 14;
+    Accessor accessor = 15;
+
+}
+
+message FieldAccessor {
+	uint32 type = 1;
+    Expression innerExpression = 2;
+    Expression parameters = 3;
+    string accessor = 4;
+}
+
+message Expression {
+	uint32 type = 1;
+    Expression innerExpression = 2;
+    string operator = 3;
+	Expression left = 4;
+	Expression right = 5;
+	repeated FieldAccessor fields = 6;
+	oneof value {
+		string value0 = 7;
+		bool value1 = 8;
+		uint32 value2 = 9;
+		double value3 = 10;
+	}
+}
+
+message TeapotTemplate {
+	uint32 type = 1;
+	Renderable root = 2;
+}
