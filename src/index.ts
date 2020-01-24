@@ -9,9 +9,15 @@ import PrimitiveField from './org/teapot/view/PrimitiveField';
 import View from './org/teapot/view/View';
 let main = function() {
 
+
     let html = "<div>" +
-                    "@for(int i = 0;i < 10;i++) <div>@(test) @(i)</div>" +
+                    "@for(int i = 0;i < 10;i++) <div>@(test) @(2 + 3 * i + 5)</div>" +
                "</div>";
+
+
+
+
+
 
     let engine: TeapotTemplateEngine = new TeapotTemplateEngine;
 
@@ -22,37 +28,24 @@ let main = function() {
     }
 
     let template: TeapotTemplate = templateParseResult.get();
+
+
+
     let pack: TeapotTemplatePack = template.pack();
-
-    let json = JSON.stringify(pack);
-
-    console.time("deserialization JSON");
-
-    for (let i = 0;i < 1;i++) {
-        JSON.parse(json);
-    }
-
-    console.timeEnd("deserialization JSON");
 
     let message = TeapotTemplateMessage.create(<ITeapotTemplateMessage>pack);
     let buffer = TeapotTemplateMessage.encode(message).finish();
 
+    console.time("All");
 
-    console.time("deserialization Protobuf");
+    //console.time("deserialization Protobuf");
 
-    for (let i = 0;i < 1;i++) {
-        let message = TeapotTemplateMessage.create(<ITeapotTemplateMessage>pack);
-        let buffer = TeapotTemplateMessage.encode(message).finish();
-        pack = <TeapotTemplatePack><unknown>TeapotTemplateMessage.decode(buffer);
-    }
+    let t = engine.fromPack(<TeapotTemplatePack><unknown>TeapotTemplateMessage.decode(buffer));
 
-    console.timeEnd("deserialization Protobuf");
+    //console.timeEnd("deserialization Protobuf");
       //console.log(JSON.stringify(obj));
 
-    console.log(Uint8ToString(buffer));
-
-    console.log(json);
-
+    //console.log(Uint8ToString(buffer));
 
     let field: ObjectField = new ObjectField();
 
@@ -60,12 +53,17 @@ let main = function() {
 
     let view = new View(field);
 
+    //console.time("rendering");
+
     let element = template.render(view);
     if (element.isThrown()) {
         throw element.getException();
     }
-    console.log(element.get());
     document.body.appendChild(element.get());
+
+    //console.timeEnd("rendering");
+
+    console.timeEnd("All");
 
 }
 function Uint8ToString(u8a){
