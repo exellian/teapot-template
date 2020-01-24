@@ -3,10 +3,7 @@ import Unhandled from './org/teapot/util/Unhandled';
 import TemplateParseException from './org/teapot/exception/TemplateParseException';
 import TeapotTemplate from './org/teapot/template/TeapotTemplate';
 import TeapotTemplatePack from './org/teapot/pack/TeapotTemplatePack';
-import TeapotFlatBufferPacker from './org/teapot/flatbuffer/TeapotFlatBufferPacker';
-import TeapotFlatBufferUnpacker from './org/teapot/flatbuffer/TeapotFlatBufferUnpacker';
 import { TeapotTemplateMessage, ITeapotTemplateMessage } from '../proto/teapot';
-import TeapotParser from './org/teapot/parser/TeapotParser';
 import ObjectField from './org/teapot/view/ObjectField';
 import PrimitiveField from './org/teapot/view/PrimitiveField';
 import View from './org/teapot/view/View';
@@ -26,15 +23,8 @@ let main = function() {
 
     let template: TeapotTemplate = templateParseResult.get();
     let pack: TeapotTemplatePack = template.pack();
-    let raw = TeapotFlatBufferPacker.pack(pack);
+
     let json = JSON.stringify(pack);
-    console.time("deserialization FlatBuffer");
-
-    for (let i = 0;i < 1;i++) {
-        TeapotFlatBufferUnpacker.parse(raw);
-    }
-
-    console.timeEnd("deserialization FlatBuffer");
 
     console.time("deserialization JSON");
 
@@ -43,7 +33,7 @@ let main = function() {
     }
 
     console.timeEnd("deserialization JSON");
-    
+
     let message = TeapotTemplateMessage.create(<ITeapotTemplateMessage>pack);
     let buffer = TeapotTemplateMessage.encode(message).finish();
 
