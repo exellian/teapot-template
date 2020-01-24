@@ -37,8 +37,6 @@ export default class Value implements Expression {
         return this.value;
     }
 
-
-
     get(_scope: Scope): Unhandled<InvalidViewAccessException, PrimitiveField> {
         return new Unhandled<InvalidViewAccessException, PrimitiveField>(new PrimitiveField(this.getValue()));
     }

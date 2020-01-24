@@ -52,6 +52,7 @@ export default class Property implements Expression {
             }
 			aktField = fieldRes.get();
 		}
+
 		if (!(aktField instanceof PrimitiveField)) {
 			return new Unhandled<InvalidViewAccessException, PrimitiveField>(new InvalidViewAccessException("Try to access non primitve value!"));
 		}

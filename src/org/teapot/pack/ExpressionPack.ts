@@ -4,17 +4,17 @@ import Pack from '../abstract/Pack';
 export default class ExpressionPack extends Pack {
 
     //BRACKETS
-    public innerExpression: ExpressionPack = null;
+    public innerExpression: ExpressionPack;
 
     //OPERATOR
-    public operator: string = null;
-	public left: ExpressionPack = null;
-	public right: ExpressionPack = null;
+    public operator: string;
+	public left: ExpressionPack;
+	public right: ExpressionPack;
 
     //PROPERTY
-    public fields: FieldAccessorPack[] = null;
+    public fields: FieldAccessorPack[];
 
     //VALUE
-    public value: number | string | boolean = null;
+    public value: number | string | boolean;
 
 }

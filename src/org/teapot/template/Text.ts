@@ -37,7 +37,11 @@ export default class Text implements Renderable {
     public render(scope: Scope): Unhandled<RenderException, Node> {
         let text: string = "";
         for (let textPartition of this.getLinkTextPartitions()) {
-            text += textPartition.render(scope);
+            let render: Unhandled<RenderException, string> = textPartition.render(scope);
+            if (render.isThrown()) {
+                return new Unhandled<RenderException, Node>(render.getException());
+            }
+            text += render.get();
         }
         return new Unhandled<RenderException, Node>(document.createTextNode(text));
     }

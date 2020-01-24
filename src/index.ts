@@ -13,7 +13,7 @@ import View from './org/teapot/view/View';
 let main = function() {
 
     let html = "<div>" +
-                    "@for(int i = 0;i < 10;i++) <div>@(test)</div>" +
+                    "@for(int i = 0;i < 10;i++) <div>@(test) @(i)</div>" +
                "</div>";
 
     let engine: TeapotTemplateEngine = new TeapotTemplateEngine;
@@ -43,20 +43,25 @@ let main = function() {
     }
 
     console.timeEnd("deserialization JSON");
-
+    
     let message = TeapotTemplateMessage.create(<ITeapotTemplateMessage>pack);
     let buffer = TeapotTemplateMessage.encode(message).finish();
+
 
     console.time("deserialization Protobuf");
 
     for (let i = 0;i < 1;i++) {
-        TeapotTemplateMessage.decode(buffer);
+        let message = TeapotTemplateMessage.create(<ITeapotTemplateMessage>pack);
+        let buffer = TeapotTemplateMessage.encode(message).finish();
+        pack = <TeapotTemplatePack><unknown>TeapotTemplateMessage.decode(buffer);
     }
 
     console.timeEnd("deserialization Protobuf");
       //console.log(JSON.stringify(obj));
 
     console.log(Uint8ToString(buffer));
+
+    console.log(json);
 
 
     let field: ObjectField = new ObjectField();
@@ -69,6 +74,7 @@ let main = function() {
     if (element.isThrown()) {
         throw element.getException();
     }
+    console.log(element.get());
     document.body.appendChild(element.get());
 
 }
