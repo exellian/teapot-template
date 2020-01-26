@@ -7,18 +7,18 @@ import { TeapotTemplateMessage, ITeapotTemplateMessage } from '../proto/teapot';
 import ObjectField from './org/teapot/view/ObjectField';
 import PrimitiveField from './org/teapot/view/PrimitiveField';
 import View from './org/teapot/view/View';
+import TeapotParser from './org/teapot/parser/TeapotParser';
+
 let main = function() {
 
 
-    let html = "<div>" +
-                    "@for(int i = 0;i < 10;i++) <div>@(test) @(2 + 3 * i + 5)</div>" +
+    let html = "<div class=@(fsada)>" +
+                    "@for(int i = 0;i < 10;i++) @lol((asd)) @for(asd)<div>@(test) @(2 + 3 * i + 5)</div>" +
                "</div>";
 
+    console.log(TeapotParser.escapeAttributes(html));
 
-
-
-
-
+/*
     let engine: TeapotTemplateEngine = new TeapotTemplateEngine;
 
     let templateParseResult: Unhandled<TemplateParseException, TeapotTemplate> = engine.parse(html);
@@ -28,8 +28,6 @@ let main = function() {
     }
 
     let template: TeapotTemplate = templateParseResult.get();
-
-
 
     let pack: TeapotTemplatePack = template.pack();
 
@@ -64,8 +62,9 @@ let main = function() {
     //console.timeEnd("rendering");
 
     console.timeEnd("All");
-
+*/
 }
+/*
 function Uint8ToString(u8a){
   var CHUNK_SZ = 0x8000;
   var c = [];
@@ -77,5 +76,6 @@ function Uint8ToString(u8a){
 // Usage
 var u8 = new Uint8Array([65, 66, 67, 68]);
 var b64encoded = btoa(Uint8ToString(u8));
+*/
 
 main();

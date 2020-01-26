@@ -1,5 +1,5 @@
 import Parser from '../abstract/Parser';
-import TeapotTemplate from '../template//TeapotTemplate';
+import TeapotTemplate from '../template/TeapotTemplate';
 import TeapotTemplatePack from '../pack/TeapotTemplatePack';
 import Unhandled from '../util/Unhandled';
 import TemplateParseException from '../exception/TemplateParseException';
@@ -7,9 +7,9 @@ import Checker from '../util/Checker';
 import IllegalArgumentException from '../exception/IllegalArgumentException';
 import Runtime from '../util/Runtime';
 import Renderable from '../template/Renderable';
-import Text from '../template//Text';
-import Attribute from '../template//Attribute';
-import Tag from '../template//Tag';
+import Text from '../template/Text';
+import Attribute from '../template/Attribute';
+import Tag from '../template/Tag';
 import Annotation from '../annotation/Annotation';
 import AnnotationType from './annotation/AnnotationType';
 import TextPartition from '../template/TextPartition';
@@ -24,7 +24,8 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
         if (!Checker.checkNotNull(html)) {
             return new Unhandled<TemplateParseException, TeapotTemplate>(new TemplateParseException(new IllegalArgumentException("Html can not be null!")));
         }
-        html = TeapotParser.replaceAnnotationCharacters(html);
+        html = TeapotParser.escapeAttributes(html);
+        html = TeapotParser.escapeAnnotations(html);
         let element: ChildNode = TeapotParser.parseHtml(html);
 
         let renderable: Unhandled<TemplateParseException, Renderable> = TeapotParser.parseNode(element);
@@ -38,21 +39,51 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
         return new Unhandled<TemplateParseException, TeapotTemplate>(teapotTemplate.get());
     }
 
-    private static replaceAnnotationCharacters(html: string): string {
+    public static escapeAttributes(html: string): string {
+        let builder: string = "";
         let match: RegExpExecArray;
-        let annotationPattern: RegExp = /@\s*[A-Za-z]*\s*\([^@.]+\)/;
 
-        let final: string = "";
-        while (match = annotationPattern.exec(html)) {
-            final += html.substring(0, match.index);
-            let annotation: string = match[0];
-            annotation = annotation.split('<').join("%0");
-            final += annotation;
-            html = html.substring(match.index + annotation.length);
+        while (match = TeapotParser.matchAnnotationAttribute(html)) {
+            let attribute: string = html.substring(match.index, match.index + match[0].length);
+            let indexOfEquals: number = attribute.indexOf('=');
+            builder += html.substring(0, match.index);
+            builder += attribute.substring(0, indexOfEquals + 1);
+            builder += '"' + TeapotParser.escapeAttribute(attribute.substring(indexOfEquals + 1)) + '"';
+            html = html.substring(match.index + match[0].length);
         }
-        final += html;
-        return final;
+        builder += html;
+        return builder;
     }
+
+    private static matchAnnotationAttribute(str: string): RegExpExecArray {
+        return TeapotParser.matchBalanced(/[A-Za-z]+\s*=\s*@\s*\([^@.]+\)/g, str, '(', ')');
+    }
+
+    private static escapeAnnotations(html: string): string {
+        return TeapotParser.escapeAnnotationsHelper(false, TeapotParser.escapeAnnotationsHelper(true, html));
+    }
+
+    private static escapeAnnotationsHelper(name: boolean, html: string): string {
+        let match: RegExpExecArray;
+        let builder: string = "";
+        while (match = TeapotParser.matchAnnotation(name, html)) {
+            let annotation: string = html.substring(match.index, match.index + match[0].length);
+            annotation = annotation.split('<').join("%0");
+            builder += html.substring(0, match.index);
+            builder += annotation;
+            html = html.substring(match.index + match[0].length);
+        }
+        builder += html;
+        return builder;
+    }
+
+    private static escapeAttribute(unsafe: string) {
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;");
+     }
 
     private static parseNode(element: ChildNode): Unhandled<TemplateParseException, Renderable> {
         if (element.nodeType == 3) {
@@ -143,21 +174,20 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
     }
 
     private static parseAnnotations(text: string, tag: Renderable): Unhandled<TemplateParseException, Renderable> {
-        let globalPattern: RegExp = /(@\s*[A-Za-z]*\s*\([^@.]+\)\s*)+/;
-        let match: RegExpExecArray = globalPattern.exec(text);
-        if (!match) {
+        let annotations: RegExpExecArray[] = TeapotParser.matchAnnotationBlock(text);
+
+        if (annotations.length === 0) {
             return new Unhandled<TemplateParseException, Renderable>(tag);
         }
-        if ((match.index + match[0].length) !== text.length) {
+        let lastAnnotation: RegExpExecArray = annotations[annotations.length - 1];
+        if (text.substring(lastAnnotation.index + lastAnnotation[0].length).replace(/\s/g, '').length !== 0) {
             return new Unhandled<TemplateParseException, Renderable>(tag);
         }
-        let block: string = match[0];
-        let annotationPattern: RegExp = /@\s*[A-Za-z]*\s*\([^@.]+\)/g;
-        while (match = annotationPattern.exec(block)) {
-            let annotation: string = match[0];
+        for (const annotationMatch of annotations) {
+            let annotation: string = annotationMatch[0];
             annotation = annotation.split('%0').join('<');
             let indexOfFirstBracket: number = annotation.indexOf('(');
-            let name: string = annotation.substring(1, indexOfFirstBracket).match(/[A-Za-z]*/)[0];
+            let name: string = annotation.substring(1, indexOfFirstBracket).match(/[A-Za-z]+/)[0];
             let expression: string = annotation.substring(indexOfFirstBracket + 1, annotation.lastIndexOf(')'));
             for (let type of AnnotationType.getValues()) {
                 if (type.getName() === name) {
@@ -177,8 +207,7 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
 
         let partitions: TextPartition[] = [];
         let match: RegExpExecArray;
-        let annotationPattern: RegExp = /@\s*\([^@.]+\)/; //TODO exclude @
-        while (match = annotationPattern.exec(text)) {
+        while (match = TeapotParser.matchAnnotation(false, text)) {
             let before: string = text.substring(0, match.index);
             if (before.length !== 0) {
                 let rp: Unhandled<IllegalArgumentException, RawTextPartition> = RawTextPartition.from(before);
@@ -210,6 +239,59 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
             partitions.push(rp.get());
         }
         return new Unhandled<TemplateParseException, TextPartition[]>(partitions);
+    }
+
+    public static matchAnnotationBlock(buffer: string): RegExpExecArray[] {
+        let annotations: RegExpExecArray[] = [];
+        let match: RegExpExecArray;
+        let firstMatch: boolean = true;
+        while (match = TeapotParser.matchAnnotation(true, buffer)) {
+            if (firstMatch) {
+                firstMatch = false;
+            } else {
+                let before: string = buffer.substring(0, match.index);
+                if (before.replace(/\s/g, '').length !== 0) {
+                    break;
+                }
+            }
+            buffer = buffer.substring(match.index + match[0].length);
+            annotations.push(match);
+        }
+        return annotations;
+    }
+
+    private static matchAnnotation(name: boolean, str: string): RegExpExecArray {
+        let r: RegExp;
+        if (name) {
+            r = /@\s*[A-Za-z]+\s*\([^@.]+\)/g;
+        } else {
+            r = /@\s*\([^@.]+\)/g;
+        }
+        return TeapotParser.matchBalanced(r, str, '(', ')');
+    }
+
+    private static matchBalanced(expr: RegExp, toMatch: string, left: string, right: string): RegExpExecArray {
+        let match: RegExpExecArray;
+        let shouldMatch = true;
+        while (shouldMatch && (match = expr.exec(toMatch))) {
+            let matchString: string = match[0];
+            if (TeapotParser.isBalanced(matchString, left, right)) {
+                return match;
+            }
+        }
+        return match;
+    }
+
+    private static isBalanced(str: string, left: string, right: string): boolean {
+        let bracketsBalance: number = 0;
+        for (const c of str.split('')) {
+            if (c === left) {
+                bracketsBalance++;
+            } else if (c === right) {
+                bracketsBalance--;
+            }
+        }
+        return bracketsBalance === 0;
     }
 
     private static parseHtml(html: string): ChildNode {
