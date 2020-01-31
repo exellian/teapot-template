@@ -62,6 +62,13 @@ export default class Tag implements Renderable {
     render(scope: Scope): Unhandled<RenderException, Node> {
 
         let element: HTMLElement = document.createElement(this.getName());
+        for (let attribute of this.getAttributes()) {
+            let attributeValue: Unhandled<RenderException, string> = attribute.getLinkValue().render(scope);
+            if (attributeValue.isThrown()) {
+                return new Unhandled<RenderException, Node>(attributeValue.getException());
+            }
+            element.setAttribute(attribute.getName(), attributeValue.get());
+        }
         for (let r of this.getLinkChildren()) {
             let renderRes: Unhandled<RenderException, Node> = r.render(scope);
             if (renderRes.isThrown()) {

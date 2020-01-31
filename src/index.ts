@@ -12,13 +12,12 @@ import TeapotParser from './org/teapot/parser/TeapotParser';
 let main = function() {
 
 
-    let html = "<div class=@(fsada)>" +
-                    "@for(int i = 0;i < 10;i++) @lol((asd)) @for(asd)<div>@(test) @(2 + 3 * i + 5)</div>" +
+    let html = "<div class=@(5 < 7)>" +
+                    "@for(int i = 0;i < 10000;i++)<div>@(test) @(i)</div>" +
                "</div>";
 
     console.log(TeapotParser.escapeAttributes(html));
 
-/*
     let engine: TeapotTemplateEngine = new TeapotTemplateEngine;
 
     let templateParseResult: Unhandled<TemplateParseException, TeapotTemplate> = engine.parse(html);
@@ -53,16 +52,16 @@ let main = function() {
 
     //console.time("rendering");
 
-    let element = template.render(view);
-    if (element.isThrown()) {
-        throw element.getException();
-    }
-    document.body.appendChild(element.get());
-
-    //console.timeEnd("rendering");
-
     console.timeEnd("All");
-*/
+
+    for (let i = 0;i < 1;i++) {
+        let element = template.render(view);
+        if (element.isThrown()) {
+            throw element.getException();
+        }
+        document.body.appendChild(element.get());
+    }
+
 }
 /*
 function Uint8ToString(u8a){

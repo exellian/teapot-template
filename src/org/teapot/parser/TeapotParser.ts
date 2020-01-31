@@ -48,7 +48,7 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
             let indexOfEquals: number = attribute.indexOf('=');
             builder += html.substring(0, match.index);
             builder += attribute.substring(0, indexOfEquals + 1);
-            builder += '"' + TeapotParser.escapeAttribute(attribute.substring(indexOfEquals + 1)) + '"';
+            builder += '"' + TeapotParser.escapeHtml(attribute.substring(indexOfEquals + 1)) + '"';
             html = html.substring(match.index + match[0].length);
         }
         builder += html;
@@ -68,7 +68,7 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
         let builder: string = "";
         while (match = TeapotParser.matchAnnotation(name, html)) {
             let annotation: string = html.substring(match.index, match.index + match[0].length);
-            annotation = annotation.split('<').join("%0");
+            annotation = TeapotParser.escapeHtml(annotation);
             builder += html.substring(0, match.index);
             builder += annotation;
             html = html.substring(match.index + match[0].length);
@@ -77,13 +77,21 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
         return builder;
     }
 
-    private static escapeAttribute(unsafe: string) {
+    private static escapeHtml(unsafe: string) {
         return unsafe
              .replace(/&/g, "&amp;")
              .replace(/</g, "&lt;")
              .replace(/>/g, "&gt;")
              .replace(/"/g, "&quot;");
-     }
+    }
+
+    private static decodeHtml(unsafe: string) {
+        return unsafe
+             .split("&amp;").join("&")
+             .split("&lt;").join("<")
+             .split("&gt;").join(">")
+             .split("&quot;").join("\"");
+    }
 
     private static parseNode(element: ChildNode): Unhandled<TemplateParseException, Renderable> {
         if (element.nodeType == 3) {
@@ -145,11 +153,11 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
                     if (TeapotParser.hasAttribute(attributes, htmlElement.attributes[i].nodeName)) {
                         continue;
                     }
-                    let partitions: Unhandled<TemplateParseException, TextPartition[]> = TeapotParser.parseValueAnnotations(htmlElement.attributes[i].nodeValue);
-                    if (partitions.isThrown()) {
-                        return new Unhandled<TemplateParseException, Renderable>(partitions.getException());
+                    let partition: Unhandled<TemplateParseException, TextPartition> = TeapotParser.parseAttribute(htmlElement.attributes[i].nodeValue);
+                    if (partition.isThrown()) {
+                        return new Unhandled<TemplateParseException, Renderable>(partition.getException());
                     }
-                    let attribute: Unhandled<IllegalArgumentException, Attribute> = Attribute.from(htmlElement.attributes[i].nodeName, partitions.get());
+                    let attribute: Unhandled<IllegalArgumentException, Attribute> = Attribute.from(htmlElement.attributes[i].nodeName, partition.get());
                     if (attribute.isThrown()) {
                         return new Unhandled<TemplateParseException, Renderable>(new TemplateParseException(attribute.getException()));
                     }
@@ -185,7 +193,7 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
         }
         for (const annotationMatch of annotations) {
             let annotation: string = annotationMatch[0];
-            annotation = annotation.split('%0').join('<');
+            annotation = TeapotParser.decodeHtml(annotation);
             let indexOfFirstBracket: number = annotation.indexOf('(');
             let name: string = annotation.substring(1, indexOfFirstBracket).match(/[A-Za-z]+/)[0];
             let expression: string = annotation.substring(indexOfFirstBracket + 1, annotation.lastIndexOf(')'));
@@ -203,6 +211,43 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
         return new Unhandled<TemplateParseException, Renderable>(tag);
     }
 
+    private static parseAttribute(text: string): Unhandled<TemplateParseException, TextPartition> {
+        if (text.charAt(0) !== '@') {
+            return TeapotParser.parseText(text);
+        }
+        let indexOfBracket: number = text.indexOf('(');
+        if (indexOfBracket === -1) {
+            return TeapotParser.parseText(text);
+        }
+        if (text.charAt(text.length - 1) !== ')') {
+            return TeapotParser.parseText(text);
+        }
+        let middle: string = text.substring(1, indexOfBracket);
+        if (middle.replace(/\s/g, '').length !== 0) {
+            return TeapotParser.parseText(text);
+        }
+        let annotation: string = text.substring(indexOfBracket + 1, text.length - 1);
+        annotation = TeapotParser.decodeHtml(annotation);
+
+        let accessor: Unhandled<TemplateParseException, Accessor> = AccessorParser.parse(annotation);
+        if (accessor.isThrown()) {
+            return new Unhandled<TemplateParseException, TextPartition>(accessor.getException());
+        }
+        let p: Unhandled<IllegalArgumentException, TextPartition> = ValueTextPartition.from(accessor.get());
+        if (p.isThrown()) {
+            return new Unhandled<TemplateParseException, TextPartition>(new TemplateParseException(p.getException()));
+        }
+        return new Unhandled<TemplateParseException, TextPartition>(p.get());
+    }
+
+    private static parseText(text: string): Unhandled<TemplateParseException, TextPartition> {
+        let p: Unhandled<IllegalArgumentException, TextPartition> = RawTextPartition.from(text)
+        if (p.isThrown()) {
+            return new Unhandled<TemplateParseException, TextPartition>(new TemplateParseException(p.getException()));
+        }
+        return new Unhandled<TemplateParseException, TextPartition>(p.get());
+    }
+
     private static parseValueAnnotations(text: string): Unhandled<TemplateParseException, TextPartition[]> {
 
         let partitions: TextPartition[] = [];
@@ -217,7 +262,7 @@ export default class TeapotParser implements Parser<TeapotTemplate, TeapotTempla
                 partitions.push(rp.get());
             }
             let annotation: string = match[0];
-            annotation = annotation.split('%0').join('<');
+            annotation = TeapotParser.decodeHtml(annotation);
             let indexOfFirstBracket: number = annotation.indexOf('(');
             let expression: string = annotation.substring(indexOfFirstBracket + 1, annotation.lastIndexOf(')'));
             let accessor: Unhandled<TemplateParseException, Accessor> = AccessorParser.parse(expression);

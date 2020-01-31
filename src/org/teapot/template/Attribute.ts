@@ -10,14 +10,14 @@ import TextPartitionPack from '../pack/TextPartitionPack';
 export default class Attribute implements Packable<AttributePack> {
 
     private readonly name: string;
-    private readonly value: TextPartition[];
+    private readonly value: TextPartition;
 
-    private constructor(name: string, value: TextPartition[]) {
+    private constructor(name: string, value: TextPartition) {
         this.name = name;
         this.value = value;
     }
 
-    public static from(name: string, value: TextPartition[]): Unhandled<IllegalArgumentException, Attribute> {
+    public static from(name: string, value: TextPartition): Unhandled<IllegalArgumentException, Attribute> {
         if (!Checker.checkNotNull(name)) {
             return new Unhandled<IllegalArgumentException, Attribute>(new IllegalArgumentException("Name can not be null!"));
         }
@@ -29,12 +29,9 @@ export default class Attribute implements Packable<AttributePack> {
 
     pack(): AttributePack {
         let pack: AttributePack = new AttributePack(TeapotPackType.ATTRIBUTE);
-        let packs: TextPartitionPack[] = [];
-        for (let v of this.getLinkValue()) {
-            packs.push(v.pack());
-        }
+        let value: TextPartitionPack = this.getLinkValue().pack();
         pack.name = this.getName();
-        pack.value = packs;
+        pack.value = value;
         return pack;
     }
 
@@ -42,7 +39,7 @@ export default class Attribute implements Packable<AttributePack> {
         return this.name;
     }
 
-    public getLinkValue(): TextPartition[] {
+    public getLinkValue(): TextPartition {
         return this.value;
     }
 }

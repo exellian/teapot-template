@@ -469,7 +469,7 @@ $root.Attribute = (function() {
      * @interface IAttribute
      * @property {number|null} [type] Attribute type
      * @property {string|null} [name] Attribute name
-     * @property {Array.<ITextPartition>|null} [value] Attribute value
+     * @property {ITextPartition|null} [value] Attribute value
      */
 
     /**
@@ -481,7 +481,6 @@ $root.Attribute = (function() {
      * @param {IAttribute=} [properties] Properties to set
      */
     function Attribute(properties) {
-        this.value = [];
         if (properties)
             for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                 if (properties[keys[i]] != null)
@@ -506,11 +505,11 @@ $root.Attribute = (function() {
 
     /**
      * Attribute value.
-     * @member {Array.<ITextPartition>} value
+     * @member {ITextPartition|null|undefined} value
      * @memberof Attribute
      * @instance
      */
-    Attribute.prototype.value = $util.emptyArray;
+    Attribute.prototype.value = null;
 
     /**
      * Creates a new Attribute instance using the specified properties.
@@ -540,9 +539,8 @@ $root.Attribute = (function() {
             writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.type);
         if (message.name != null && message.hasOwnProperty("name"))
             writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
-        if (message.value != null && message.value.length)
-            for (var i = 0; i < message.value.length; ++i)
-                $root.TextPartition.encode(message.value[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+        if (message.value != null && message.hasOwnProperty("value"))
+            $root.TextPartition.encode(message.value, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
         return writer;
     };
 
@@ -584,9 +582,7 @@ $root.Attribute = (function() {
                 message.name = reader.string();
                 break;
             case 3:
-                if (!(message.value && message.value.length))
-                    message.value = [];
-                message.value.push($root.TextPartition.decode(reader, reader.uint32()));
+                message.value = $root.TextPartition.decode(reader, reader.uint32());
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -630,13 +626,9 @@ $root.Attribute = (function() {
             if (!$util.isString(message.name))
                 return "name: string expected";
         if (message.value != null && message.hasOwnProperty("value")) {
-            if (!Array.isArray(message.value))
-                return "value: array expected";
-            for (var i = 0; i < message.value.length; ++i) {
-                var error = $root.TextPartition.verify(message.value[i]);
-                if (error)
-                    return "value." + error;
-            }
+            var error = $root.TextPartition.verify(message.value);
+            if (error)
+                return "value." + error;
         }
         return null;
     };
@@ -657,15 +649,10 @@ $root.Attribute = (function() {
             message.type = object.type >>> 0;
         if (object.name != null)
             message.name = String(object.name);
-        if (object.value) {
-            if (!Array.isArray(object.value))
-                throw TypeError(".Attribute.value: array expected");
-            message.value = [];
-            for (var i = 0; i < object.value.length; ++i) {
-                if (typeof object.value[i] !== "object")
-                    throw TypeError(".Attribute.value: object expected");
-                message.value[i] = $root.TextPartition.fromObject(object.value[i]);
-            }
+        if (object.value != null) {
+            if (typeof object.value !== "object")
+                throw TypeError(".Attribute.value: object expected");
+            message.value = $root.TextPartition.fromObject(object.value);
         }
         return message;
     };
@@ -683,21 +670,17 @@ $root.Attribute = (function() {
         if (!options)
             options = {};
         var object = {};
-        if (options.arrays || options.defaults)
-            object.value = [];
         if (options.defaults) {
             object.type = 0;
             object.name = "";
+            object.value = null;
         }
         if (message.type != null && message.hasOwnProperty("type"))
             object.type = message.type;
         if (message.name != null && message.hasOwnProperty("name"))
             object.name = message.name;
-        if (message.value && message.value.length) {
-            object.value = [];
-            for (var j = 0; j < message.value.length; ++j)
-                object.value[j] = $root.TextPartition.toObject(message.value[j], options);
-        }
+        if (message.value != null && message.hasOwnProperty("value"))
+            object.value = $root.TextPartition.toObject(message.value, options);
         return object;
     };
 

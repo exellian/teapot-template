@@ -14,7 +14,7 @@ message TextPartition {
 message Attribute {
 	uint32 type = 1;
 	string name = 2;
-    repeated TextPartition value = 3;
+    TextPartition value = 3;
 }
 
 message Renderable {

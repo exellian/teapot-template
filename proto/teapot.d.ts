@@ -1,4 +1,4 @@
-import * as $protobuf from "protobufjs/minimal";
+import * as $protobuf from "protobufjs";
 /** Properties of an Accessor. */
 export interface IAccessor {
 
@@ -207,7 +207,7 @@ export interface IAttribute {
     name?: (string|null);
 
     /** Attribute value */
-    value?: (ITextPartition[]|null);
+    value?: (ITextPartition|null);
 }
 
 /** Represents an Attribute. */
@@ -226,7 +226,7 @@ export class Attribute implements IAttribute {
     public name: string;
 
     /** Attribute value. */
-    public value: ITextPartition[];
+    public value?: (ITextPartition|null);
 
     /**
      * Creates a new Attribute instance using the specified properties.

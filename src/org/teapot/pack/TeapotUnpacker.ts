@@ -196,7 +196,6 @@ export default class TeapotUnpacker implements Unpacker<TeapotTemplate, TeapotTe
         return new Unhandled<UnpackException, TextPartition[]>(textPartitions);
     }
 
-
     private static fromAttributePack(pack: AttributePack): Unhandled<UnpackException, Attribute> {
         if (!Checker.checkNotNull(pack)) {
             return new Unhandled<UnpackException, Attribute>(new UnpackException(new IllegalArgumentException("Pack can not be null!")));
@@ -204,11 +203,11 @@ export default class TeapotUnpacker implements Unpacker<TeapotTemplate, TeapotTe
         if (pack.type !== TeapotPackType.ATTRIBUTE) {
             return new Unhandled<UnpackException, Attribute>(new UnpackException(new IllegalArgumentException("Attribute pack type invalid!")));
         }
-        let textPartitions: Unhandled<UnpackException, TextPartition[]> = TeapotUnpacker.fromTextPartitionPackArray(pack.value);
-        if (textPartitions.isThrown()) {
-            return new Unhandled<UnpackException, Attribute>(textPartitions.getException());
+        let textPartition: Unhandled<UnpackException, TextPartition> = TeapotUnpacker.fromTextPartitionPack(pack.value);
+        if (textPartition.isThrown()) {
+            return new Unhandled<UnpackException, Attribute>(textPartition.getException());
         }
-        let attribute: Unhandled<IllegalArgumentException, Attribute> = Attribute.from(pack.name, textPartitions.get());
+        let attribute: Unhandled<IllegalArgumentException, Attribute> = Attribute.from(pack.name, textPartition.get());
         if (attribute.isThrown()) {
             return new Unhandled<UnpackException, Attribute>(new UnpackException(attribute.getException()));
         }

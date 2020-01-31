@@ -15,7 +15,6 @@ export default class ValueParser {
         }
         let stringValue: Unhandled<StringParseException, string> = ValueParser.parseString(accessor);
         if (!stringValue.isThrown()) {
-            console.log(stringValue.isThrown());
             let value: Unhandled<IllegalArgumentException, Value> = Value.from(stringValue.get());
 
             if (value.isThrown()) {
